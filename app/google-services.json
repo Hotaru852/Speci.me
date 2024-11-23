@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "652593785425",
+    "project_id": "specime-da047",
+    "storage_bucket": "specime-da047.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:652593785425:android:6c0ee80843179929dce670",
+        "android_client_info": {
+          "package_name": "com.example.specime"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "652593785425-dscegell5d1ktdrim90p191g88t2f8k7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.specime",
+            "certificate_hash": "517ab9b45f39d346c5c1dbc216d97e7836f9f45e"
+          }
+        },
+        {
+          "client_id": "652593785425-e784ionvflieedf4lr6k4iqvu3n6oomo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDB30h-Ci2qjrERxLqDXVSJivKWKxSTWEU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "652593785425-e784ionvflieedf4lr6k4iqvu3n6oomo.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
