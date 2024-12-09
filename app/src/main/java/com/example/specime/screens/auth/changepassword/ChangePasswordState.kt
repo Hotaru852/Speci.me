@@ -7,5 +7,6 @@ data class ChangePasswordState (
     val currentPasswordError: String? = null,
     val newPasswordError: String? = null,
     val confirmPasswordError: String? = null,
-    val isChanged: Boolean = false
+    val isChanged: Boolean = false,
+    val isChangingPassword: Boolean = false
 )

@@ -2,16 +2,19 @@ package com.example.specime.screens.auth.signup
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,15 +24,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.specime.components.buttons.FlexibleButton
-import com.example.specime.components.inputs.FlexibleTextField
+import com.example.specime.screens.auth.components.FlexibleButton
+import com.example.specime.components.common.FlexibleTextField
 
 @Composable
 fun SignupScreen(
     navController: NavController,
-    viewmodel: SignupViewmodel = hiltViewModel()
+    viewModel: SignupViewmodel = hiltViewModel()
 ) {
-    val state = viewmodel.state
+    val state = viewModel.state
 
     LaunchedEffect(state.isSignedUp) {
         if (state.isSignedUp) {
@@ -47,7 +50,7 @@ fun SignupScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.primary)
     ) {
-        Spacer(modifier = Modifier.height(100.dp))
+        Spacer(modifier = Modifier.weight(1f))
         Text(
             "Đăng Ký",
             color = MaterialTheme.colorScheme.surface,
@@ -61,7 +64,7 @@ fun SignupScreen(
             height = 50,
             rounded = 7,
             onValueChange = { email ->
-                viewmodel.handleAction(SignupAction.EnterEmail(email))
+                viewModel.handleAction(SignupAction.EnterEmail(email))
             },
             leadingIcon = Icons.Filled.Email,
             errorMessage = state.emailError
@@ -73,7 +76,7 @@ fun SignupScreen(
             height = 50,
             rounded = 7,
             onValueChange = { username ->
-                viewmodel.handleAction(SignupAction.EnterUsername(username))
+                viewModel.handleAction(SignupAction.EnterUsername(username))
             },
             leadingIcon = Icons.Filled.Person,
             errorMessage = state.usernameError
@@ -85,11 +88,11 @@ fun SignupScreen(
             height = 50,
             rounded = 7,
             onValueChange = { password ->
-                viewmodel.handleAction(SignupAction.EnterPassword(password))
+                viewModel.handleAction(SignupAction.EnterPassword(password))
             },
             leadingIcon = Icons.Filled.Lock,
             errorMessage = state.passwordError,
-            isPasswordField = true
+            isPassword = true
         )
         FlexibleTextField(
             label = "Nhập lại mật khẩu",
@@ -98,11 +101,11 @@ fun SignupScreen(
             height = 50,
             rounded = 7,
             onValueChange = { confirmPassword ->
-                viewmodel.handleAction(SignupAction.EnterConfirmPassword(confirmPassword))
+                viewModel.handleAction(SignupAction.EnterConfirmPassword(confirmPassword))
             },
             leadingIcon = Icons.Filled.Lock,
             errorMessage = state.confirmPasswordEroor,
-            isPasswordField = true
+            isPassword = true
         )
         Spacer(modifier = Modifier.height(30.dp))
         FlexibleButton(
@@ -110,7 +113,7 @@ fun SignupScreen(
             width = 320,
             height = 45,
             onClick = {
-                viewmodel.handleAction(SignupAction.SubmitSignup)
+                viewModel.handleAction(SignupAction.SubmitSignup)
             },
             rounded = 40
         )
@@ -131,6 +134,20 @@ fun SignupScreen(
                 modifier = Modifier.clickable {
                     navController.navigate("login")
                 }
+            )
+        }
+    }
+
+    if (state.isSigningUp) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(50.dp)
             )
         }
     }

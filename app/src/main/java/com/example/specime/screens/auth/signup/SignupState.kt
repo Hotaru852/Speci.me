@@ -9,5 +9,6 @@ data class SignupState(
     val usernameError: String? = null,
     val passwordError: String? = null,
     val confirmPasswordEroor: String? = null,
-    val isSignedUp: Boolean = false
+    val isSignedUp: Boolean = false,
+    val isSigningUp: Boolean = false
 )

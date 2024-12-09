@@ -42,6 +42,8 @@ class SignupViewmodel @Inject constructor(
             }
 
             SignupAction.SubmitSignup -> {
+                state = state.copy(isSigningUp = true)
+
                 val emailError = validateEmail(state.email)
                 val usernameError = validateUsername(state.username)
                 val passwordError = validateSignupPassword(state.password)
@@ -67,6 +69,7 @@ class SignupViewmodel @Inject constructor(
                     else state.copy(
                         emailError = if (message == "Tài khoản đã tồn tại" || message == "Email không tồn tại") message else null,
                     )
+                    state = state.copy(isSigningUp = false)
                 }
             }
         }

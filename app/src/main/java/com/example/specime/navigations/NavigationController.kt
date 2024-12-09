@@ -16,30 +16,31 @@ import com.example.specime.screens.auth.signin.SigninScreen
 import com.example.specime.screens.auth.signup.SignupScreen
 import com.example.specime.screens.auth.confirmation.ConfirmationScreen
 import com.example.specime.screens.auth.changepassword.ChangePasswordSceen
-import com.example.specime.screens.connections.ConnectionsScreen
+//import com.example.specime.screens.connections.FriendsScreen
 import com.example.specime.screens.disc.DISCScreen
 import com.example.specime.screens.account.AccountScreen
-import com.example.specime.screens.results.ResultsScreen
+import com.example.specime.screens.result.ResultsScreen
+import com.example.specime.screens.test.TestScreen
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun NavigationController() {
+fun NavigationController(startDestination: String) {
     val navController = rememberAnimatedNavController()
 
     Scaffold(
         bottomBar = {
             val currentRoute = currentRoute(navController)
-            if (currentRoute in listOf("disc", "results", "connections", "account")) {
+            if (currentRoute in listOf("disc", "result", "friends", "account")) {
                 BottomNavigationBar(navController)
             }
         }
     ) { innerPadding ->
         AnimatedNavHost(
             navController = navController,
-            startDestination = "login",
+            startDestination = startDestination,
             enterTransition = { EnterTransition.None },
             exitTransition = { ExitTransition.None },
             popEnterTransition = { EnterTransition.None },
@@ -72,8 +73,9 @@ fun NavigationController() {
                 )
             }
             composable("disc") { DISCScreen(navController) }
-            composable("results") { ResultsScreen(navController) }
-            composable("connections") { ConnectionsScreen(navController) }
+            composable("test") { TestScreen(navController) }
+            composable("result") { ResultsScreen() }
+//            composable("friends") { FriendsScreen() }
             composable("account") { AccountScreen(navController) }
         }
     }

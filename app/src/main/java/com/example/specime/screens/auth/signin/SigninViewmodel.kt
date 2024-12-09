@@ -1,5 +1,6 @@
 package com.example.specime.screens.auth.signin
 
+import android.content.SharedPreferences
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -12,7 +13,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SigninViewmodel @Inject constructor(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val sharedPreferences: SharedPreferences,
 ) : ViewModel() {
     var state by mutableStateOf(SigninState())
         private set
@@ -39,6 +41,8 @@ class SigninViewmodel @Inject constructor(
             }
 
             is SigninAction.SubmitAccountEmail -> {
+                state = state.copy(isSendingEmail = true)
+
                 val accountEmailError = validateEmail(state.accountEmail)
 
                 if (accountEmailError != null) {
@@ -46,15 +50,18 @@ class SigninViewmodel @Inject constructor(
                     return
                 }
 
-                userRepository.sendResetPasswordEmail(state.accountEmail) { success, message ->
+                userRepository.sendResetPasswordEmail(state.accountEmail) { success, _ ->
                     if (success) {
                         state = state.copy(isForgotPassword = false)
                         state = state.copy(isConfirming = true)
                     }
+                    state = state.copy(isSendingEmail = false)
                 }
             }
 
             SigninAction.SubmitLogin -> {
+                state = state.copy(isLoggingIn = true)
+
                 val emailError = validateEmail(state.email)
                 val passwordError = validateSigninPassword(state.password)
 
@@ -71,6 +78,9 @@ class SigninViewmodel @Inject constructor(
                     password = state.password
                 ) { success, message ->
                     if (success) {
+                        sharedPreferences.edit()
+                            .putBoolean("rememberLogin", state.rememberSignin)
+                            .apply()
                         state = state.copy(isLoggedIn = true)
                     } else {
                         if (message == "Email chưa được xác minh") {
@@ -80,6 +90,7 @@ class SigninViewmodel @Inject constructor(
                             state = state.copy(passwordError = message)
                         }
                     }
+                    state = state.copy(isLoggingIn = false)
                 }
             }
 

@@ -23,7 +23,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -36,7 +35,7 @@ import com.example.specime.R
 @Composable
 fun PopupConfirmation(
     message: String,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.success))
     val progress by animateLottieCompositionAsState(composition, iterations = 1)
@@ -76,14 +75,4 @@ fun PopupConfirmation(
             )
         }
     }
-}
-
-@Preview
-@Composable
-fun Preview() {
-    PopupConfirmation(
-        message = "Bạn đã đăng ký thành công",
-        onDismiss = {}
-    )
-
 }

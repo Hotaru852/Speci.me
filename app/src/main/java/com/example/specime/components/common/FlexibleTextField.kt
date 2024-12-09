@@ -1,4 +1,4 @@
-package com.example.specime.components.inputs
+package com.example.specime.components.common
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
@@ -52,10 +52,10 @@ fun FlexibleTextField(
     rounded: Int,
     onValueChange: (String) -> Unit,
     leadingIcon: ImageVector,
-    isPasswordField: Boolean = false,
+    isPassword: Boolean = false,
     isLogin: Boolean = false,
     errorMessage: String? = null,
-    forgotPassword: () -> Unit = {}
+    forgotPassword: () -> Unit = {},
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
     var isFocused by remember { mutableStateOf(false) }
@@ -97,13 +97,13 @@ fun FlexibleTextField(
                     onValueChange = onValueChange,
                     textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = if (isPasswordField) KeyboardType.Password else KeyboardType.Text,
+                        keyboardType = if (isPassword) KeyboardType.Password else KeyboardType.Text,
                         imeAction = ImeAction.Done
                     ),
                     keyboardActions = KeyboardActions(
                         onDone = { focusManager.clearFocus() }
                     ),
-                    visualTransformation = if (isPasswordField && !passwordVisible) {
+                    visualTransformation = if (isPassword && !passwordVisible) {
                         PasswordVisualTransformation()
                     } else {
                         VisualTransformation.None
@@ -123,12 +123,12 @@ fun FlexibleTextField(
                             isFocused = focusState.isFocused
                         }
                         .then(
-                            if (isPasswordField) Modifier.padding(start = 10.dp)
+                            if (isPassword) Modifier.padding(start = 10.dp)
                             else Modifier.padding(start = 10.dp, end = 15.dp)
                         )
                 )
 
-                if (isPasswordField) {
+                if (isPassword) {
                     IconButton(
                         onClick = { passwordVisible = !passwordVisible },
                     ) {
@@ -160,7 +160,7 @@ fun FlexibleTextField(
                 } else {
                     Spacer(modifier = Modifier.weight(1f))
                 }
-                if (isPasswordField && isLogin) {
+                if (isPassword && isLogin) {
                     Text(
                         text = "Quên mật khẩu?",
                         color = MaterialTheme.colorScheme.surface,

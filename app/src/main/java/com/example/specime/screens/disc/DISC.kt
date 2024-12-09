@@ -1,6 +1,8 @@
 package com.example.specime.screens.disc
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,13 +19,13 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.specime.components.buttons.FlexibleButton
+import com.example.specime.screens.auth.components.FlexibleButton
 import com.example.specime.screens.disc.components.InfoCard
 
 @Composable
-fun DISCScreen(navController: NavController? = null) {
+fun DISCScreen(navController: NavController) {
     val text = buildAnnotatedString {
-        append("khi làm bài kiểm tra ")
+        append("khi làm bài đánh giá ")
         append(
             AnnotatedString(
                 text = "D",
@@ -58,12 +60,14 @@ fun DISCScreen(navController: NavController? = null) {
         )
     }
 
+    BackHandler(enabled = true) {}
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxSize()
             .background(MaterialTheme.colorScheme.primary)
     ) {
-        Spacer(modifier = Modifier.weight(1f))
         Text(
             "Những lợi ích bạn sẽ nhận được",
             color = MaterialTheme.colorScheme.surface,
@@ -97,15 +101,14 @@ fun DISCScreen(navController: NavController? = null) {
         )
         Spacer(modifier = Modifier.height(30.dp))
         FlexibleButton(
-            text = "Làm bài kiểm tra DISC ngay",
+            text = "Làm bài đánh giá DISC ngay",
             width = 300,
             height = 45,
             onClick = {
-
+                navController.navigate("test")
             },
             rounded = 10
         )
-        Spacer(modifier = Modifier.weight(1f))
     }
 
 }

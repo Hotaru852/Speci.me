@@ -6,9 +6,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Assessment
-import androidx.compose.material.icons.filled.People
+//import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -38,8 +38,8 @@ fun BottomNavigationBar(navController: NavController) {
             iconBitmap = ImageBitmap.imageResource(id = R.drawable.ic_disc),
             route = "disc"
         ),
-        BottomNavItem("Kết quả", iconVector = Icons.Filled.Assessment, route = "results"),
-        BottomNavItem("Bạn bè", iconVector = Icons.Filled.People, route = "connections"),
+        BottomNavItem("Kết quả", iconVector = Icons.Filled.PieChart, route = "result"),
+//        BottomNavItem("Bạn bè", iconVector = Icons.Filled.People, route = "friends"),
         BottomNavItem("Tài khoản", iconVector = Icons.Filled.Person, route = "account")
     )
 
@@ -89,11 +89,7 @@ fun BottomNavigationBar(navController: NavController) {
                     selected = isSelected,
                     onClick = {
                         if (!isSelected) {
-                            navController.navigate(item.route) {
-                                popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
+                            navController.navigate(item.route)
                         }
                     },
                     colors = NavigationBarItemDefaults.colors(

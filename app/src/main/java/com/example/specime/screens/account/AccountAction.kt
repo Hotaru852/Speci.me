@@ -1,9 +1,12 @@
 package com.example.specime.screens.account
 
-interface AccountAction {
+import android.net.Uri
+
+sealed interface AccountAction {
     data class EnterName(val name: String) : AccountAction
     data class EnterEmail(val email: String) : AccountAction
     data class EnterBirthday(val birthday: String) : AccountAction
+    data class UploadProfilePicture(val uri: Uri) : AccountAction
     data object SubmitNameChange : AccountAction
     data object SubmitEmailChange : AccountAction
     data object SubmitEditName : AccountAction

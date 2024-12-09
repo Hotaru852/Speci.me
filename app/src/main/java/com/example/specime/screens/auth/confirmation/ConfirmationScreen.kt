@@ -14,8 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.airbnb.lottie.compose.LottieAnimation
@@ -23,7 +22,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.example.specime.R
-import com.example.specime.components.buttons.FlexibleButton
+import com.example.specime.screens.auth.components.FlexibleButton
 
 @Composable
 fun ConfirmationScreen(
@@ -51,8 +50,9 @@ fun ConfirmationScreen(
         Spacer(modifier = Modifier.height(50.dp))
         Text(
             title,
-            color = MaterialTheme.colorScheme.inversePrimary,
-            style = MaterialTheme.typography.displaySmall
+            color = MaterialTheme.colorScheme.surface,
+            style = MaterialTheme.typography.displaySmall,
+            fontWeight = FontWeight.Bold
         )
         if (message != null) {
             Spacer(modifier = Modifier.height(10.dp))
@@ -77,16 +77,4 @@ fun ConfirmationScreen(
             )
         }
     }
-}
-
-@Preview
-@Composable
-fun ConfirmationScreenPreview() {
-    ConfirmationScreen(
-        navController = NavController(LocalContext.current),
-        title = "Đăng ký thành công",
-        message = "Vui lòng kiểm tra hộp thư đến của bạn",
-        buttonText = "ĐĂNG NHẬP",
-        route = "login"
-    )
 }

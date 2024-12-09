@@ -6,5 +6,5 @@ data class UserState(
     val currentUser: FirebaseUser? = null,
     val email: String? = null,
     val displayName: String? = null,
-    val photoUrl: String? = null,
+    val profilePictureUrl: String? = null,
 )

@@ -1,15 +1,18 @@
 package com.example.specime.screens.auth.changepassword
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -24,8 +27,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.specime.components.buttons.FlexibleButton
-import com.example.specime.components.inputs.FlexibleTextField
+import com.example.specime.screens.auth.components.FlexibleButton
+import com.example.specime.components.common.FlexibleTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,7 +94,7 @@ fun ChangePasswordSceen(
                 },
                 leadingIcon = Icons.Filled.Lock,
                 errorMessage = state.currentPasswordError,
-                isPasswordField = true
+                isPassword = true
             )
             FlexibleTextField(
                 label = "Mật khẩu mới",
@@ -104,7 +107,7 @@ fun ChangePasswordSceen(
                 },
                 leadingIcon = Icons.Filled.Lock,
                 errorMessage = state.newPasswordError,
-                isPasswordField = true
+                isPassword = true
             )
             FlexibleTextField(
                 label = "Nhập lại mật khẩu mới",
@@ -117,7 +120,7 @@ fun ChangePasswordSceen(
                 },
                 leadingIcon = Icons.Filled.Lock,
                 errorMessage = state.confirmPasswordError,
-                isPasswordField = true
+                isPassword = true
             )
             Spacer(modifier = Modifier.height(20.dp))
             FlexibleButton(
@@ -129,6 +132,20 @@ fun ChangePasswordSceen(
                 },
                 rounded = 40
             )
+        }
+
+        if (state.isChangingPassword) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(50.dp)
+                )
+            }
         }
     }
 }

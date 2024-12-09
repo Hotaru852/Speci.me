@@ -2,17 +2,19 @@ package com.example.specime.screens.auth.signin
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Mail
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,19 +24,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.specime.components.buttons.FlexibleButton
-import com.example.specime.components.buttons.GoogleButton
+import com.example.specime.screens.auth.components.FlexibleButton
 import com.example.specime.components.common.PopupConfirmation
 import com.example.specime.components.common.PopupEdit
-import com.example.specime.components.inputs.FlexibleTextField
+import com.example.specime.components.common.FlexibleTextField
 import com.example.specime.screens.auth.components.CheckBox
 
 @Composable
 fun SigninScreen(
     navController: NavController,
-    viewmodel: SigninViewmodel = hiltViewModel(),
+    viewModel: SigninViewmodel = hiltViewModel(),
 ) {
-    val state = viewmodel.state
+    val state = viewModel.state
 
     LaunchedEffect(state.isLoggedIn) {
         if (state.isLoggedIn) {
@@ -48,7 +49,7 @@ fun SigninScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.primary)
     ) {
-        Spacer(modifier = Modifier.height(140.dp))
+        Spacer(modifier = Modifier.weight(1f))
         Text(
             "Đăng Nhập",
             color = MaterialTheme.colorScheme.surface,
@@ -62,7 +63,7 @@ fun SigninScreen(
             height = 50,
             rounded = 7,
             onValueChange = { email ->
-                viewmodel.handleAction(SigninAction.EnterEmail(email))
+                viewModel.handleAction(SigninAction.EnterEmail(email))
             },
             leadingIcon = Icons.Filled.Email,
             errorMessage = state.emailError
@@ -74,14 +75,14 @@ fun SigninScreen(
             height = 50,
             rounded = 7,
             onValueChange = { password ->
-                viewmodel.handleAction(SigninAction.EnterPassword(password))
+                viewModel.handleAction(SigninAction.EnterPassword(password))
             },
             errorMessage = state.passwordError,
             leadingIcon = Icons.Filled.Lock,
-            isPasswordField = true,
+            isPassword = true,
             isLogin = true,
             forgotPassword = {
-                viewmodel.handleAction(SigninAction.SubmitForgotPassword)
+                viewModel.handleAction(SigninAction.SubmitForgotPassword)
             }
         )
         Spacer(modifier = Modifier.height(10.dp))
@@ -89,7 +90,7 @@ fun SigninScreen(
             label = "Ghi nhớ đăng nhập",
             checked = state.rememberSignin,
             onCheckedChange = { isChecked ->
-                viewmodel.handleAction(SigninAction.RememberSignin(isChecked))
+                viewModel.handleAction(SigninAction.RememberSignin(isChecked))
             }
         )
         Spacer(modifier = Modifier.height(20.dp))
@@ -98,45 +99,45 @@ fun SigninScreen(
             width = 320,
             height = 45,
             onClick = {
-                viewmodel.handleAction(SigninAction.SubmitLogin)
+                viewModel.handleAction(SigninAction.SubmitLogin)
             },
             rounded = 40
         )
-        Spacer(modifier = Modifier.height(20.dp))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.surface,
-                thickness = 2.dp,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 170.dp)
-            )
-            Text(
-                "HOẶC",
-                color = MaterialTheme.colorScheme.surface,
-                style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier.padding(start = 5.dp, end = 5.dp)
-            )
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.surface,
-                thickness = 2.dp,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 170.dp)
-            )
-        }
-        Spacer(modifier = Modifier.height(20.dp))
-        Text(
-            "Đăng nhập với",
-            color = MaterialTheme.colorScheme.surface,
-            style = MaterialTheme.typography.titleSmall
-        )
-        Spacer(modifier = Modifier.height(20.dp))
-        GoogleButton(
-            onClick = {}
-        )
+//        Spacer(modifier = Modifier.height(20.dp))
+//        Row(
+//            verticalAlignment = Alignment.CenterVertically,
+//        ) {
+//            HorizontalDivider(
+//                color = MaterialTheme.colorScheme.surface,
+//                thickness = 2.dp,
+//                modifier = Modifier
+//                    .weight(1f)
+//                    .padding(start = 170.dp)
+//            )
+//            Text(
+//                "HOẶC",
+//                color = MaterialTheme.colorScheme.surface,
+//                style = MaterialTheme.typography.titleSmall,
+//                modifier = Modifier.padding(start = 5.dp, end = 5.dp)
+//            )
+//            HorizontalDivider(
+//                color = MaterialTheme.colorScheme.surface,
+//                thickness = 2.dp,
+//                modifier = Modifier
+//                    .weight(1f)
+//                    .padding(end = 170.dp)
+//            )
+//        }
+//        Spacer(modifier = Modifier.height(20.dp))
+//        Text(
+//            "Đăng nhập với",
+//            color = MaterialTheme.colorScheme.surface,
+//            style = MaterialTheme.typography.titleSmall
+//        )
+//        Spacer(modifier = Modifier.height(20.dp))
+//        GoogleButton(
+//            onClick = {}
+//        )
         Spacer(modifier = Modifier.weight(1f))
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -158,6 +159,20 @@ fun SigninScreen(
         }
     }
 
+    if (state.isLoggingIn) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(50.dp)
+            )
+        }
+    }
+
     if (state.isForgotPassword) {
         PopupEdit(
             errorMessage = state.accountEmailError,
@@ -165,14 +180,15 @@ fun SigninScreen(
             label = "Email của bạn",
             leadingIcon = Icons.Filled.Mail,
             onDismiss = {
-                viewmodel.handleAction(SigninAction.CancelForgotPassword)
+                viewModel.handleAction(SigninAction.CancelForgotPassword)
             },
             onConfirm = {
-                viewmodel.handleAction(SigninAction.SubmitAccountEmail)
+                viewModel.handleAction(SigninAction.SubmitAccountEmail)
             },
             onValueChange = { accountEmail ->
-                viewmodel.handleAction(SigninAction.EnterAccountEmail(accountEmail))
-            }
+                viewModel.handleAction(SigninAction.EnterAccountEmail(accountEmail))
+            },
+            isUploading = state.isSendingEmail
         )
     }
 
@@ -180,7 +196,7 @@ fun SigninScreen(
         PopupConfirmation(
             message = "Kiểm tra hộp thư đến của bạn",
             onDismiss = {
-                viewmodel.handleAction(SigninAction.CloseConfirmation)
+                viewModel.handleAction(SigninAction.CloseConfirmation)
             }
         )
     }

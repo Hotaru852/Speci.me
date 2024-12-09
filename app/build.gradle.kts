@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.example.specime"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.specime"
@@ -46,13 +46,19 @@ android {
 }
 
 dependencies {
+    implementation(libs.firebase.storage.ktx)
     val composeBom = platform("androidx.compose:compose-bom:2024.10.01")
     implementation(composeBom)
     androidTestImplementation(composeBom)
     kapt(libs.hilt.compiler)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.datastore.core)
+    implementation(libs.coil.compose)
     implementation(libs.hilt.android)
+    implementation(libs.mpandroidchart)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(platform(libs.firebase.bom))
+    implementation(libs.google.firebase.firestore.ktx)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.play.services.auth)
     implementation(libs.gms.play.services.auth)

@@ -1,4 +1,4 @@
-package com.example.specime.components.buttons
+package com.example.specime.screens.auth.components
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,7 +12,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -25,14 +24,10 @@ fun FlexibleButton(
 ) {
     Surface(
         shape = RoundedCornerShape(rounded.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        shadowElevation = 5.dp,
         modifier = Modifier
             .width(width.dp)
             .height(height.dp)
-            .shadow(
-                elevation = 5.dp,
-                shape = RoundedCornerShape(rounded.dp),
-            )
     ) {
         Button(
             onClick = onClick,

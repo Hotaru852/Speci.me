@@ -1,4 +1,4 @@
-package com.example.specime.components.buttons
+package com.example.specime.screens.auth.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding

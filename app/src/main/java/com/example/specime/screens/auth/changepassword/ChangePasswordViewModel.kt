@@ -35,6 +35,8 @@ class ChangePasswordViewmodel @Inject constructor(
             }
 
             ChangePasswordAction.SubmitChange -> {
+                state = state.copy(isChangingPassword = true)
+
                 val currentPasswordError = validateSignupPassword(state.currentPassword)
                 val newPasswordError = validateSignupPassword(state.newPassword)
                 val confirmPasswordError =
@@ -58,6 +60,7 @@ class ChangePasswordViewmodel @Inject constructor(
                     } else {
                         state = state.copy(currentPasswordError = message)
                     }
+                    state = state.copy(isChangingPassword = false)
                 }
             }
         }

@@ -1,10 +1,16 @@
 package com.example.specime.screens.account
 
 import android.app.DatePickerDialog
+import android.net.Uri
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.DateRange
@@ -12,10 +18,15 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -32,138 +43,178 @@ import java.util.Calendar
 @Composable
 fun AccountScreen(
     navController: NavController,
-    viewmodel: AccountViewModel = hiltViewModel(),
+    viewModel: AccountViewModel = hiltViewModel(),
 ) {
-    val state = viewmodel.state
+    val state = viewModel.state
 
-    val context = LocalContext.current
+    BackHandler(enabled = true) {}
 
-    LaunchedEffect(state.isSignedOut) {
-        if (state.isSignedOut) {
-            navController.navigate("login")
-        }
-    }
-
-    LaunchedEffect(state.isChangingPassword) {
-        if (state.isChangingPassword) {
-            navController.navigate("changePassword")
-        }
-    }
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .fillMaxSize()
-            .background(color = MaterialTheme.colorScheme.primary)
-    ) {
-        Spacer(modifier = Modifier.weight(1f))
-        ProfilePicture(
-            imageSize = 200,
-            iconSize = 50,
-            editable = true
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        Surface(
-            tonalElevation = 7.dp
+    if (state.isLoading) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.primary)
         ) {
-            Column(
-                modifier = Modifier
-                    .background(color = MaterialTheme.colorScheme.surface)
-            ) {
-                AccountField(
-                    label = "Tên người dùng",
-                    value = state.name,
-                    leadingIcon = Icons.Filled.Person,
-                    onClick = {
-                        viewmodel.handleAction(AccountAction.SubmitEditName)
-                    }
-                )
-                AccountField(
-                    label = "Email",
-                    value = state.email,
-                    leadingIcon = Icons.Filled.Email,
-                    onClick = {
-                        viewmodel.handleAction(AccountAction.SubmitEditEmail)
-                    }
-                )
-                AccountField(
-                    label = "Sinh nhật",
-                    value = state.birthday,
-                    leadingIcon = Icons.Filled.DateRange,
-                    onClick = {
-                        val calendar = Calendar.getInstance()
-                        DatePickerDialog(
-                            context,
-                            R.style.CustomDatePickerDialog,
-                            { _, selectedYear, selectedMonth, selectedDay ->
-                                viewmodel.handleAction(AccountAction.EnterBirthday("${selectedDay}/${selectedMonth + 1}/$selectedYear"))
-                            },
-                            calendar.get(Calendar.YEAR),
-                            calendar.get(Calendar.MONTH),
-                            calendar.get(Calendar.DAY_OF_MONTH)
-                        ).show()
-                    }
-                )
-                AccountField(
-                    label = "Đổi mật khẩu",
-                    leadingIcon = Icons.Filled.Lock,
-                    onClick = {
-                        viewmodel.handleAction(AccountAction.SubmitPasswordChange)
-                    }
-                )
-                AccountField(
-                    label = "Đăng xuất",
-                    leadingIcon = Icons.AutoMirrored.Filled.ExitToApp,
-                    onClick = {
-                        viewmodel.handleAction(AccountAction.SubmitSignout)
-                    }
-                )
+            CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.surface,
+                modifier = Modifier.size(50.dp)
+            )
+        }
+    } else {
+        val context = LocalContext.current
+
+        var imageUri by remember { mutableStateOf<Uri?>(null) }
+
+        val launcher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.GetContent()
+        ) { uri: Uri? ->
+            uri?.let {
+                imageUri = it
             }
         }
-    }
 
-    if (state.isEditingName) {
-        PopupEdit(
-            errorMessage = state.nameError,
-            value = state.name,
-            label = "Thay đổi Tên người dùng",
-            leadingIcon = Icons.Filled.Person,
-            onDismiss = {
-                viewmodel.handleAction(AccountAction.CancelEditName)
-            },
-            onConfirm = {
-                viewmodel.handleAction(AccountAction.SubmitNameChange)
-            },
-            onValueChange = { name ->
-                viewmodel.handleAction(AccountAction.EnterName(name))
+        LaunchedEffect(state.isSignedOut) {
+            if (state.isSignedOut) {
+                navController.navigate("login")
             }
-        )
-    }
+        }
 
-    if (state.isEditingEmail) {
-        PopupEdit(
-            errorMessage = state.emailError,
-            value = state.email,
-            label = "Thay đổi Email",
-            leadingIcon = Icons.Filled.Mail,
-            onDismiss = {
-                viewmodel.handleAction(AccountAction.CancelEditEmail)
-            },
-            onConfirm = {
-                viewmodel.handleAction(AccountAction.SubmitEmailChange)
-            },
-            onValueChange = { email ->
-                viewmodel.handleAction(AccountAction.EnterEmail(email))
+        LaunchedEffect(state.isChangingPassword) {
+            if (state.isChangingPassword) {
+                navController.navigate("changePassword")
             }
-        )
-    }
+        }
 
-    if (state.isConfirming) {
-        PopupConfirmation(
-            message = "Kiểm tra hộp thư đến của bạn",
-            onDismiss = {
-                viewmodel.handleAction(AccountAction.CloseConfirmation)
+        LaunchedEffect(imageUri) {
+            imageUri?.let { uri ->
+                viewModel.handleAction(AccountAction.UploadProfilePicture(uri))
             }
-        )
+        }
+
+        BackHandler(enabled = true) {}
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = MaterialTheme.colorScheme.primary)
+        ) {
+            Spacer(modifier = Modifier.weight(1f))
+            ProfilePicture(
+                imageUrl = state.profilePictureUrl,
+                imageSize = 200,
+                iconSize = 50,
+                editable = true,
+                onClick = { launcher.launch("image/*") },
+                isUploading = state.isUploadingProfilePicture
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Surface(
+                tonalElevation = 7.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .background(color = MaterialTheme.colorScheme.surface)
+                ) {
+                    AccountField(
+                        label = "Tên người dùng",
+                        value = state.name,
+                        leadingIcon = Icons.Filled.Person,
+                        onClick = {
+                            viewModel.handleAction(AccountAction.SubmitEditName)
+                        }
+                    )
+                    AccountField(
+                        label = "Email",
+                        value = state.email,
+                        leadingIcon = Icons.Filled.Email,
+                        onClick = {
+                            viewModel.handleAction(AccountAction.SubmitEditEmail)
+                        }
+                    )
+                    AccountField(
+                        label = "Sinh nhật",
+                        value = state.birthday,
+                        leadingIcon = Icons.Filled.DateRange,
+                        onClick = {
+                            val calendar = Calendar.getInstance()
+                            DatePickerDialog(
+                                context,
+                                R.style.CustomDatePickerDialog,
+                                { _, selectedYear, selectedMonth, selectedDay ->
+                                    viewModel.handleAction(AccountAction.EnterBirthday("${selectedDay}/${selectedMonth + 1}/$selectedYear"))
+                                },
+                                calendar.get(Calendar.YEAR),
+                                calendar.get(Calendar.MONTH),
+                                calendar.get(Calendar.DAY_OF_MONTH)
+                            ).show()
+                        }
+                    )
+                    AccountField(
+                        label = "Đổi mật khẩu",
+                        leadingIcon = Icons.Filled.Lock,
+                        onClick = {
+                            viewModel.handleAction(AccountAction.SubmitPasswordChange)
+                        }
+                    )
+                    AccountField(
+                        label = "Đăng xuất",
+                        leadingIcon = Icons.AutoMirrored.Filled.ExitToApp,
+                        onClick = {
+                            viewModel.handleAction(AccountAction.SubmitSignout)
+                        }
+                    )
+                }
+            }
+        }
+
+        if (state.isEditingName) {
+            PopupEdit(
+                errorMessage = state.nameError,
+                value = state.name,
+                label = "Thay đổi Tên người dùng",
+                leadingIcon = Icons.Filled.Person,
+                onDismiss = {
+                    viewModel.handleAction(AccountAction.CancelEditName)
+                },
+                onConfirm = {
+                    viewModel.handleAction(AccountAction.SubmitNameChange)
+                },
+                onValueChange = { name ->
+                    viewModel.handleAction(AccountAction.EnterName(name))
+                },
+                isUploading = state.isUploading
+            )
+        }
+
+        if (state.isEditingEmail) {
+            PopupEdit(
+                errorMessage = state.emailError,
+                value = state.email,
+                label = "Thay đổi Email",
+                leadingIcon = Icons.Filled.Mail,
+                onDismiss = {
+                    viewModel.handleAction(AccountAction.CancelEditEmail)
+                },
+                onConfirm = {
+                    viewModel.handleAction(AccountAction.SubmitEmailChange)
+                },
+                onValueChange = { email ->
+                    viewModel.handleAction(AccountAction.EnterEmail(email))
+                },
+                isUploading = state.isUploading
+            )
+        }
+
+        if (state.isConfirming) {
+            PopupConfirmation(
+                message = "Kiểm tra hộp thư đến của bạn",
+                onDismiss = {
+                    viewModel.handleAction(AccountAction.CloseConfirmation)
+                }
+            )
+        }
     }
 }

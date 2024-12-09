@@ -10,5 +10,7 @@ data class SigninState(
     val isLoggedIn: Boolean = false,
     val rememberSignin: Boolean = false,
     val isForgotPassword: Boolean = false,
-    val isConfirming: Boolean = false
+    val isConfirming: Boolean = false,
+    val isLoggingIn: Boolean = false,
+    val isSendingEmail: Boolean = false
 )
