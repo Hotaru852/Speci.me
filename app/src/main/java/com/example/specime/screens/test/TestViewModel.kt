@@ -26,7 +26,7 @@ class TestViewModel @Inject constructor(
     }
 
     private fun fetchQuestions() {
-        state = state.copy(isLoading = true) // Set loading state before fetching data
+        state = state.copy(isLoading = true)
         fireStoreController.fetchQuestions { questions, error ->
             state = if (error != null) {
                 state.copy(isLoading = false)
@@ -45,11 +45,10 @@ class TestViewModel @Inject constructor(
         if (userId != null) {
             val result = state.selectedAnswers.values.groupingBy { it }.eachCount()
             val data: Map<String, Any> = mapOf(
-                "userId" to userId,
                 "result" to result
             )
 
-            fireStoreController.uploadTestResult(userId, data) { _ -> }
+            fireStoreController.uploadTestResult(userId, data)
         }
     }
 

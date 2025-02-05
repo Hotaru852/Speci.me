@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -29,6 +30,7 @@ fun AccountField(
     value: String? = null,
     leadingIcon: ImageVector,
     onClick: () -> Unit,
+    editable: Boolean = true
 ) {
     Column {
         HorizontalDivider(
@@ -41,8 +43,10 @@ fun AccountField(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(80.dp)
-                .clickable(onClick = onClick)
                 .padding(start = 20.dp, end = 10.dp)
+                .then(
+                    if (editable) Modifier.clickable(onClick = onClick) else Modifier
+                )
         ) {
             Icon(
                 imageVector = leadingIcon,
@@ -70,7 +74,7 @@ fun AccountField(
             }
             Spacer(modifier = Modifier.weight(1f))
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                imageVector = if (editable) Icons.AutoMirrored.Filled.KeyboardArrowRight else Icons.Filled.Lock,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
             )

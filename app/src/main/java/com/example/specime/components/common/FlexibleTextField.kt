@@ -101,7 +101,9 @@ fun FlexibleTextField(
                         imeAction = ImeAction.Done
                     ),
                     keyboardActions = KeyboardActions(
-                        onDone = { focusManager.clearFocus() }
+                        onDone = {
+                            focusManager.clearFocus()
+                        }
                     ),
                     visualTransformation = if (isPassword && !passwordVisible) {
                         PasswordVisualTransformation()

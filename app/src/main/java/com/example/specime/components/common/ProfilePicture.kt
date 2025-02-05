@@ -2,6 +2,7 @@ package com.example.specime.components.common
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -25,10 +26,10 @@ import coil.compose.AsyncImagePainter
 fun ProfilePicture(
     imageUrl: String?,
     imageSize: Int,
-    iconSize: Int,
     editable: Boolean = false,
-    onClick: () -> Unit,
-    isUploading: Boolean,
+    onButtonClick: () -> Unit = {},
+    onProfilePictureClick: () -> Unit = {},
+    isUploading: Boolean = false,
 ) {
     var isLoading by remember { mutableStateOf(true) }
 
@@ -40,6 +41,7 @@ fun ProfilePicture(
             shape = CircleShape,
             color = MaterialTheme.colorScheme.surface,
             modifier = Modifier.fillMaxSize()
+                .clickable(onClick = onProfilePictureClick)
         ) {
             when {
                 imageUrl != "" -> {
@@ -60,6 +62,7 @@ fun ProfilePicture(
                         contentDescription = "Default Profile Picture",
                         modifier = Modifier.fillMaxSize()
                     )
+                    isLoading = false
                 }
             }
 
@@ -83,10 +86,10 @@ fun ProfilePicture(
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 7.dp,
-                modifier = Modifier.size(iconSize.dp)
+                modifier = Modifier.size(50.dp)
             ) {
                 IconButton(
-                    onClick = onClick,
+                    onClick = onButtonClick,
                     modifier = Modifier
                 ) {
                     Icon(

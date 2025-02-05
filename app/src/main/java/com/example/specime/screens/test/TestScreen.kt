@@ -70,7 +70,7 @@ fun TestScreen(
         LaunchedEffect(state.isDone) {
             if (state.isDone) {
                 val title = "Chúc mừng"
-                val message = "Bạn đã hoàn thành bài kiểm tra"
+                val message = "Bạn đã hoàn thành bài đánh giá"
                 val buttonText = "XEM KẾT QUẢ"
                 val route = "result"
 

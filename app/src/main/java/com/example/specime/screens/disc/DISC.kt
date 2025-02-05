@@ -19,7 +19,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.specime.screens.auth.components.FlexibleButton
+import com.example.specime.components.common.FlexibleButton
 import com.example.specime.screens.disc.components.InfoCard
 
 @Composable

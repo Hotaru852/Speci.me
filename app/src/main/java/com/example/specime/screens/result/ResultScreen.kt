@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -20,6 +21,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.specime.screens.result.components.DataChart
@@ -101,8 +103,10 @@ fun ResultsScreen(
                     text,
                     color = MaterialTheme.colorScheme.surface,
                     style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 50.dp)
                 )
+                Spacer(modifier = Modifier.height(50.dp))
                 Row {
                     Text(
                         "Bạn thuộc nhóm tính cách ",
@@ -120,12 +124,21 @@ fun ResultsScreen(
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(100.dp))
+                state.discDescriptions[state.personality]?.let {
+                    Text(
+                        text = "Bạn là $it",
+                        color = MaterialTheme.colorScheme.surface,
+                        style = MaterialTheme.typography.titleLarge,
+                        textAlign = TextAlign.Center
+                        )
+                }
+                Spacer(modifier = Modifier.weight(1f))
                 state.result?.let {
                     DataChart(
                         result = it,
                     )
                 }
+                Spacer(modifier = Modifier.weight(1f))
             }
         } else {
             Column(

@@ -34,16 +34,15 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.specime.R
-import com.example.specime.components.common.PopupConfirmation
 import com.example.specime.components.common.ProfilePicture
 import com.example.specime.screens.account.components.AccountField
-import com.example.specime.components.common.PopupEdit
+import com.example.specime.components.common.PopupDialog
 import java.util.Calendar
 
 @Composable
 fun AccountScreen(
     navController: NavController,
-    viewModel: AccountViewModel = hiltViewModel(),
+    viewModel: AccountViewModel = hiltViewModel()
 ) {
     val state = viewModel.state
 
@@ -105,9 +104,8 @@ fun AccountScreen(
             ProfilePicture(
                 imageUrl = state.profilePictureUrl,
                 imageSize = 200,
-                iconSize = 50,
                 editable = true,
-                onClick = { launcher.launch("image/*") },
+                onButtonClick = { launcher.launch("image/*") },
                 isUploading = state.isUploadingProfilePicture
             )
             Spacer(modifier = Modifier.weight(1f))
@@ -120,19 +118,20 @@ fun AccountScreen(
                 ) {
                     AccountField(
                         label = "Tên người dùng",
-                        value = state.name,
+                        value = state.oldDisplayName,
                         leadingIcon = Icons.Filled.Person,
                         onClick = {
-                            viewModel.handleAction(AccountAction.SubmitEditName)
+                            viewModel.handleAction(AccountAction.SubmitEditDisplayName)
                         }
                     )
                     AccountField(
                         label = "Email",
-                        value = state.email,
+                        value = state.oldEmail,
                         leadingIcon = Icons.Filled.Email,
                         onClick = {
                             viewModel.handleAction(AccountAction.SubmitEditEmail)
-                        }
+                        },
+                        editable = !state.isGoogleAccount
                     )
                     AccountField(
                         label = "Sinh nhật",
@@ -157,7 +156,8 @@ fun AccountScreen(
                         leadingIcon = Icons.Filled.Lock,
                         onClick = {
                             viewModel.handleAction(AccountAction.SubmitPasswordChange)
-                        }
+                        },
+                        editable = !state.isGoogleAccount
                     )
                     AccountField(
                         label = "Đăng xuất",
@@ -171,29 +171,30 @@ fun AccountScreen(
         }
 
         if (state.isEditingName) {
-            PopupEdit(
+            PopupDialog(
                 errorMessage = state.nameError,
-                value = state.name,
-                label = "Thay đổi Tên người dùng",
+                value = state.currentDisplayName,
+                label = "Tên người dùng",
                 leadingIcon = Icons.Filled.Person,
                 onDismiss = {
-                    viewModel.handleAction(AccountAction.CancelEditName)
+                    viewModel.handleAction(AccountAction.CancelEditDisplayName)
                 },
                 onConfirm = {
-                    viewModel.handleAction(AccountAction.SubmitNameChange)
+                    viewModel.handleAction(AccountAction.SubmitDisplayNameChange)
                 },
                 onValueChange = { name ->
-                    viewModel.handleAction(AccountAction.EnterName(name))
+                    viewModel.handleAction(AccountAction.EnterDisplayName(name))
                 },
                 isUploading = state.isUploading
             )
         }
 
-        if (state.isEditingEmail) {
-            PopupEdit(
+        if (state.isEditingEmail || state.isConfirming) {
+            PopupDialog(
                 errorMessage = state.emailError,
-                value = state.email,
-                label = "Thay đổi Email",
+                confirmationMessage = "Kiểm tra hộp thư đến của bạn",
+                value = state.currentEmail,
+                label = "Email",
                 leadingIcon = Icons.Filled.Mail,
                 onDismiss = {
                     viewModel.handleAction(AccountAction.CancelEditEmail)
@@ -204,16 +205,8 @@ fun AccountScreen(
                 onValueChange = { email ->
                     viewModel.handleAction(AccountAction.EnterEmail(email))
                 },
-                isUploading = state.isUploading
-            )
-        }
-
-        if (state.isConfirming) {
-            PopupConfirmation(
-                message = "Kiểm tra hộp thư đến của bạn",
-                onDismiss = {
-                    viewModel.handleAction(AccountAction.CloseConfirmation)
-                }
+                isUploading = state.isUploading,
+                isConfirming = state.isConfirming
             )
         }
     }

@@ -4,10 +4,9 @@ import android.content.SharedPreferences
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
-import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -15,39 +14,25 @@ import javax.inject.Singleton
 class UserRepository @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val fireStore: FirebaseFirestore,
-    private val sharedPreferences: SharedPreferences
+    private val sharedPreferences: SharedPreferences,
 ) {
-    private val _userState = MutableStateFlow(UserState())
-
-    init {
-        val currentUser = firebaseAuth.currentUser
-        currentUser?.let { updateUserState(it) }
-    }
-
-    private fun updateUserState(user: FirebaseUser) {
-        _userState.value = UserState(
-            currentUser = user,
-            email = user.email,
-            displayName = user.displayName,
-            profilePictureUrl = user.photoUrl?.toString()
-        )
-    }
-
-    private fun clearUserState() {
-        _userState.value = UserState()
-    }
-
     fun getUserId(): String? {
         return firebaseAuth.currentUser?.uid
     }
 
-    private fun saveUserToFirestore(userId: String, username: String, email: String) {
+    private fun saveUserToFirestore(
+        userId: String,
+        displayName: String,
+        email: String,
+        profilePictureUrl: String,
+        isGoogleAccount: Boolean
+    ) {
         val userMap = mapOf(
-            "userId" to userId,
-            "username" to username,
+            "displayName" to displayName,
             "email" to email,
             "birthday" to "1/1/2000",
-            "profilePictureUrl" to ""
+            "profilePictureUrl" to profilePictureUrl,
+            "isGoogleAccount" to isGoogleAccount
         )
         fireStore.collection("users")
             .document(userId)
@@ -59,12 +44,23 @@ class UserRepository @Inject constructor(
             }
     }
 
+    fun startAuthStateListener() {
+        FirebaseAuth.AuthStateListener { auth ->
+            val user = auth.currentUser
+            if (user != null && user.isEmailVerified) {
+                fireStore.collection("users")
+                    .document(user.uid)
+                    .update("email", user.email)
+            }
+        }
+    }
+
     fun changePasswordWithVerification(
         currentPassword: String,
         newPassword: String,
         callback: (success: Boolean, message: String?) -> Unit
     ) {
-        val currentUser = _userState.value.currentUser
+        val currentUser = firebaseAuth.currentUser
         if (currentUser != null && currentUser.email != null) {
             val credential = EmailAuthProvider.getCredential(currentUser.email!!, currentPassword)
 
@@ -74,27 +70,58 @@ class UserRepository @Inject constructor(
                         currentUser.updatePassword(newPassword)
                             .addOnCompleteListener { updateTask ->
                                 if (updateTask.isSuccessful) {
-                                    callback(true, "Mật khẩu đã được thay đổi thành công")
-                                } else {
-                                    callback(false, updateTask.exception?.localizedMessage ?: "Lỗi khi thay đổi mật khẩu")
+                                    callback(true, null)
                                 }
                             }
                     } else {
-                        callback(false, "Mật khẩu hiện tại không chính xác")
+                        callback(false, "Sai mật khẩu")
                     }
                 }
-        } else {
-            callback(false, "Người dùng chưa đăng nhập")
         }
     }
 
-    fun sendResetPasswordEmail(email: String, callback: (success: Boolean, message: String?) -> Unit) {
+    fun sendResetPasswordEmail(
+        email: String,
+        callback: (success: Boolean) -> Unit
+    ) {
         firebaseAuth.sendPasswordResetEmail(email)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    callback(true, "Email đặt lại mật khẩu đã được gửi")
-                } else {
-                    callback(false, task.exception?.localizedMessage ?: "Lỗi khi gửi email đặt lại mật khẩu")
+                    callback(true)
+                }
+            }
+    }
+
+    fun signInWithGoogle(
+        idToken: String,
+        callback: (success: Boolean) -> Unit
+    ) {
+        val authCredential = GoogleAuthProvider.getCredential(idToken, null)
+
+        firebaseAuth.signInWithCredential(authCredential)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val currentUser = firebaseAuth.currentUser
+
+                    if (currentUser != null) {
+                        val userDocRef = fireStore.collection("users").document(currentUser.uid)
+                        userDocRef.get()
+                            .addOnSuccessListener { document ->
+                                if (!document.exists()) {
+                                    val displayName = currentUser.displayName ?: ""
+                                    val email = currentUser.email ?: ""
+
+                                    saveUserToFirestore(
+                                        userId = currentUser.uid,
+                                        displayName = displayName,
+                                        email = email,
+                                        profilePictureUrl = currentUser.photoUrl.toString(),
+                                        isGoogleAccount = true
+                                    )
+                                }
+                                callback(true)
+                            }
+                    }
                 }
             }
     }
@@ -110,7 +137,6 @@ class UserRepository @Inject constructor(
                 if (task.isSuccessful) {
                     val currentUser = firebaseAuth.currentUser
                     if (currentUser?.isEmailVerified == true) {
-                        updateUserState(currentUser)
                         callback(true, null)
                     } else {
                         firebaseAuth.signOut()
@@ -143,10 +169,12 @@ class UserRepository @Inject constructor(
                                     if (verificationTask.isSuccessful) {
                                         saveUserToFirestore(
                                             userId = currentUser.uid,
-                                            username = username,
-                                            email = email
+                                            displayName = username,
+                                            email = email,
+                                            profilePictureUrl = "",
+                                            isGoogleAccount = false
                                         )
-                                        callback(true, "Đăng ký thành công. Vui lòng xác minh email của bạn")
+                                        callback(true, "")
                                     } else {
                                         currentUser.delete()
                                             .addOnCompleteListener {
@@ -154,25 +182,25 @@ class UserRepository @Inject constructor(
                                             }
                                     }
                                 }
-                        } else {
-                            callback(false, updateTask.exception?.localizedMessage ?: "Lỗi khi cập nhật tên hiển thị")
                         }
                     }
                 } else {
-                    val errorMessage = when (val exception = task.exception) {
-                        is FirebaseAuthUserCollisionException -> "Tài khoản đã tồn tại"
-                        else -> exception?.localizedMessage ?: "Lỗi không xác định"
-                    }
-                    callback(false, errorMessage)
+                    if (task.exception is FirebaseAuthUserCollisionException) callback(
+                        false,
+                        "Email đã được sử dụng"
+                    )
                 }
             }
     }
 
-    fun updateUsername(newUsername: String, callback: (success: Boolean, message: String?) -> Unit) {
+    fun updateUserDisplayName(
+        newDisplayName: String,
+        callback: (success: Boolean) -> Unit
+    ) {
         val currentUser = firebaseAuth.currentUser
         if (currentUser != null) {
             val profileUpdates = UserProfileChangeRequest.Builder()
-                .setDisplayName(newUsername)
+                .setDisplayName(newDisplayName)
                 .build()
 
             currentUser.updateProfile(profileUpdates)
@@ -180,50 +208,29 @@ class UserRepository @Inject constructor(
                     if (task.isSuccessful) {
                         fireStore.collection("users")
                             .document(currentUser.uid)
-                            .update("username", newUsername)
+                            .update("displayName", newDisplayName)
                             .addOnSuccessListener {
-                                updateUserState(currentUser)
-                                callback(true, "Tên người dùng đã được thay đổi thành công")
+                                callback(true)
                             }
-                            .addOnFailureListener { exception ->
-                                callback(false, exception.localizedMessage ?: "Lỗi khi cập nhật tên người dùng")
-                            }
-                    } else {
-                        callback(false, task.exception?.localizedMessage ?: "Lỗi khi cập nhật tên người dùng")
                     }
                 }
-        } else {
-            callback(false, "Người dùng chưa đăng nhập")
         }
     }
 
-    fun updateEmail(newEmail: String, callback: (success: Boolean, message: String?) -> Unit) {
+    fun updateEmail(
+        newEmail: String,
+        callback: (success: Boolean) -> Unit
+    ) {
         val currentUser = firebaseAuth.currentUser
-        if (currentUser != null) {
-            currentUser.verifyBeforeUpdateEmail(newEmail)
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        fireStore.collection("users")
-                            .document(currentUser.uid)
-                            .update("email", newEmail)
-                            .addOnSuccessListener {
-                                callback(true, "Email đã được gửi để xác nhận. Vui lòng kiểm tra hộp thư của bạn.")
-                            }
-                            .addOnFailureListener { exception ->
-                                callback(false, exception.localizedMessage ?: "Lỗi khi cập nhật email.")
-                            }
-                    } else {
-                        callback(false, task.exception?.localizedMessage ?: "Lỗi khi cập nhật email.")
-                    }
-                }
-        } else {
-            callback(false, "Người dùng chưa đăng nhập.")
+        currentUser?.verifyBeforeUpdateEmail(newEmail)?.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                callback(true)
+            }
         }
     }
 
     fun signOut() {
         firebaseAuth.signOut()
         sharedPreferences.edit().remove("rememberLogin").apply()
-        clearUserState()
     }
 }

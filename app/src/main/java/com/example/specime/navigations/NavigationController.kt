@@ -12,14 +12,17 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.example.specime.components.common.BottomNavigationBar
-import com.example.specime.screens.auth.signin.SigninScreen
-import com.example.specime.screens.auth.signup.SignupScreen
-import com.example.specime.screens.auth.confirmation.ConfirmationScreen
-import com.example.specime.screens.auth.changepassword.ChangePasswordSceen
+import com.example.specime.screens.auths.signin.SigninScreen
+import com.example.specime.screens.auths.signup.SignupScreen
+import com.example.specime.screens.auths.confirmation.ConfirmationScreen
+import com.example.specime.screens.auths.changepassword.ChangePasswordSceen
 //import com.example.specime.screens.connections.FriendsScreen
 import com.example.specime.screens.disc.DISCScreen
 import com.example.specime.screens.account.AccountScreen
+import com.example.specime.screens.connections.ConnectionsScreen
+import com.example.specime.screens.notifications.NotificationsScreen
 import com.example.specime.screens.result.ResultsScreen
+import com.example.specime.screens.search.SearchScreen
 import com.example.specime.screens.test.TestScreen
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
@@ -33,7 +36,7 @@ fun NavigationController(startDestination: String) {
     Scaffold(
         bottomBar = {
             val currentRoute = currentRoute(navController)
-            if (currentRoute in listOf("disc", "result", "friends", "account")) {
+            if (currentRoute in listOf("disc", "result", "connections", "account")) {
                 BottomNavigationBar(navController)
             }
         }
@@ -75,7 +78,9 @@ fun NavigationController(startDestination: String) {
             composable("disc") { DISCScreen(navController) }
             composable("test") { TestScreen(navController) }
             composable("result") { ResultsScreen() }
-//            composable("friends") { FriendsScreen() }
+            composable("connections") { ConnectionsScreen(navController) }
+            composable("search") { SearchScreen(navController) }
+            composable("notifications") { NotificationsScreen(navController) }
             composable("account") { AccountScreen(navController) }
         }
     }

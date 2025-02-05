@@ -6,8 +6,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.specime.firestore.FireStoreController
-import com.example.specime.screens.auth.components.validateEmail
-import com.example.specime.screens.auth.components.validateUsername
+import com.example.specime.screens.auths.components.validateEmail
+import com.example.specime.screens.auths.components.validateUsername
 import com.example.specime.userrepository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -26,14 +26,17 @@ class AccountViewModel @Inject constructor(
     }
     private fun loadUserData() {
         viewModelScope.launch {
-            fireStoreController.loadUserDetails { success, email, displayName, birthday, profilePictureUrl ->
+            fireStoreController.loadUserDetails { success, email, displayName, birthday, profilePictureUrl, isGoogleAccount ->
                 state = if (success) {
                     state.copy(
-                        email = email.orEmpty(),
-                        name = displayName.orEmpty(),
+                        currentEmail = email.orEmpty(),
+                        oldEmail = email.orEmpty(),
+                        currentDisplayName = displayName.orEmpty(),
+                        oldDisplayName = displayName.orEmpty(),
                         birthday = birthday ?: "1/1/2000",
                         profilePictureUrl = profilePictureUrl,
-                        isLoading = false
+                        isLoading = false,
+                        isGoogleAccount = isGoogleAccount ?: false
                     )
                 } else {
                     state.copy(
@@ -46,13 +49,13 @@ class AccountViewModel @Inject constructor(
 
     fun handleAction(action: AccountAction) {
         when (action) {
-            is AccountAction.EnterName -> {
-                state = state.copy(name = action.name)
+            is AccountAction.EnterDisplayName -> {
+                state = state.copy(currentDisplayName = action.displayName)
                 state = state.copy(nameError = null)
             }
 
             is AccountAction.EnterEmail -> {
-                state = state.copy(email = action.email)
+                state = state.copy(currentEmail = action.email)
                 state = state.copy(emailError = null)
             }
 
@@ -78,44 +81,59 @@ class AccountViewModel @Inject constructor(
                 }
             }
 
-            is AccountAction.SubmitNameChange -> {
-                state = state.copy(isUploading = true)
+            is AccountAction.SubmitDisplayNameChange -> {
+                if (state.currentDisplayName == state.oldDisplayName) {
+                    state = state.copy(isEditingName = false)
+                    return
+                }
 
-                val nameError = validateUsername(state.name)
+                val nameError = validateUsername(state.currentDisplayName)
 
                 if (nameError != null) {
                     state = state.copy(nameError = nameError)
                     return
                 }
 
-                userRepository.updateUsername(state.name) { success, _ ->
+                state = state.copy(isUploading = true)
+
+                userRepository.updateUserDisplayName(state.currentDisplayName) { success ->
                     if (success) {
-                        state = state.copy(name = state.name)
-                        state = state.copy(isEditingName = false)
+                        state = state.copy(
+                            oldDisplayName = state.currentDisplayName,
+                            isEditingName = false
+                        )
                     }
                     state = state.copy(isUploading = false)
                 }
             }
 
             is AccountAction.SubmitEmailChange -> {
-                state = state.copy(isUploading = true)
+                if (state.currentEmail == state.oldEmail) {
+                    state = state.copy(isEditingEmail = false)
+                    return
+                }
 
-                val emailError = validateEmail(state.email)
+                val emailError = validateEmail(state.currentEmail)
 
                 if (emailError != null) {
                     state = state.copy(emailError = emailError)
+                    return
                 }
 
-                userRepository.updateEmail(state.email) { success, _ ->
+                state = state.copy(isUploading = true)
+
+                userRepository.updateEmail(state.currentEmail) { success ->
                     if (success) {
-                        state = state.copy(isEditingEmail = false)
-                        state = state.copy(isConfirming = true)
+                        state = state.copy(
+                            isEditingEmail = false,
+                            isConfirming = true
+                        )
                     }
                     state = state.copy(isUploading = false)
                 }
             }
 
-            is AccountAction.SubmitEditName -> {
+            is AccountAction.SubmitEditDisplayName -> {
                 state = state.copy(isEditingName = true)
             }
 
@@ -123,12 +141,19 @@ class AccountViewModel @Inject constructor(
                 state = state.copy(isEditingEmail = true)
             }
 
-            is AccountAction.CancelEditName -> {
-                state = state.copy(isEditingName = false)
+            is AccountAction.CancelEditDisplayName -> {
+                state = state.copy(
+                    currentDisplayName = state.oldDisplayName,
+                    isEditingName = false
+                )
             }
 
             is AccountAction.CancelEditEmail -> {
-                state = state.copy(isEditingEmail = false)
+                state = state.copy(
+                    currentEmail = state.oldEmail,
+                    isEditingEmail = false,
+                    isConfirming = false
+                )
             }
 
             is AccountAction.SubmitPasswordChange -> {
@@ -138,10 +163,6 @@ class AccountViewModel @Inject constructor(
             is AccountAction.SubmitSignout -> {
                 state = state.copy(isSignedOut = true)
                 userRepository.signOut()
-            }
-
-            is AccountAction.CloseConfirmation -> {
-                state = state.copy(isConfirming = false)
             }
         }
     }
