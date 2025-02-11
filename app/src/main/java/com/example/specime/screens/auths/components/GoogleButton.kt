@@ -1,5 +1,6 @@
 package com.example.specime.screens.auths.components
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -21,10 +22,15 @@ fun GoogleButton(
     Surface(
         color = MaterialTheme.colorScheme.surface,
         shape = CircleShape,
-        shadowElevation = 4.dp,
+        shadowElevation = 5.dp,
         modifier = Modifier
             .size(48.dp)
             .clickable { onClick() }
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.primary,
+                shape = CircleShape
+            )
     ) {
         Icon(
             painter = painterResource(R.drawable.ic_google),

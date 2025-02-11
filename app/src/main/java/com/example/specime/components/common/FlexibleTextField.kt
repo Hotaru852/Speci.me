@@ -1,5 +1,6 @@
 package com.example.specime.components.common
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.rememberScrollableState
@@ -68,7 +69,7 @@ fun FlexibleTextField(
         if (label != null) {
             Text(
                 label,
-                color = MaterialTheme.colorScheme.surface,
+                color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.labelLarge
             )
         }
@@ -80,6 +81,11 @@ fun FlexibleTextField(
             modifier = Modifier
                 .width(width.dp)
                 .height(height.dp)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(rounded.dp)
+                )
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -165,7 +171,7 @@ fun FlexibleTextField(
                 if (isPassword && isLogin) {
                     Text(
                         text = "Quên mật khẩu?",
-                        color = MaterialTheme.colorScheme.surface,
+                        color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.labelMedium,
                         modifier = Modifier.clickable {
                             forgotPassword()

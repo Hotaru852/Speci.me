@@ -85,7 +85,7 @@ fun ProfilePicture(
             Surface(
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.surface,
-                shadowElevation = 7.dp,
+                shadowElevation = 5.dp,
                 modifier = Modifier.size(50.dp)
             ) {
                 IconButton(

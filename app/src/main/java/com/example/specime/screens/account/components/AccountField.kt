@@ -60,7 +60,7 @@ fun AccountField(
             ) {
                 Text(
                     text = label,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )

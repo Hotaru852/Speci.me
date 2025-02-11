@@ -59,12 +59,12 @@ fun SignupScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary)
+            .background(MaterialTheme.colorScheme.surface)
     ) {
         Spacer(modifier = Modifier.weight(1f))
         Text(
             "Đăng Ký",
-            color = MaterialTheme.colorScheme.surface,
+            color = MaterialTheme.colorScheme.primary,
             style = MaterialTheme.typography.displayMedium,
             fontWeight = FontWeight.Bold
         )
@@ -136,7 +136,7 @@ fun SignupScreen(
         ) {
             Text(
                 "Bạn đã có tài khoản? ",
-                color = MaterialTheme.colorScheme.surface,
+                color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.titleMedium
             )
             Text(
@@ -145,7 +145,8 @@ fun SignupScreen(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.clickable {
                     navController.navigate("login")
-                }
+                },
+                fontWeight = FontWeight.Bold
             )
         }
     }

@@ -54,10 +54,10 @@ fun AccountScreen(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.primary)
+                .background(MaterialTheme.colorScheme.surface)
         ) {
             CircularProgressIndicator(
-                color = MaterialTheme.colorScheme.surface,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(50.dp)
             )
         }
@@ -92,13 +92,12 @@ fun AccountScreen(
             }
         }
 
-        BackHandler(enabled = true) {}
-
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
             modifier = Modifier
                 .fillMaxSize()
-                .background(color = MaterialTheme.colorScheme.primary)
+                .background(MaterialTheme.colorScheme.primary)
         ) {
             Spacer(modifier = Modifier.weight(1f))
             ProfilePicture(

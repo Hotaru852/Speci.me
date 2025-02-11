@@ -16,14 +16,13 @@ import com.example.specime.screens.auths.signin.SigninScreen
 import com.example.specime.screens.auths.signup.SignupScreen
 import com.example.specime.screens.auths.confirmation.ConfirmationScreen
 import com.example.specime.screens.auths.changepassword.ChangePasswordSceen
-//import com.example.specime.screens.connections.FriendsScreen
-import com.example.specime.screens.disc.DISCScreen
+import com.example.specime.screens.disc.main.DISCScreen
 import com.example.specime.screens.account.AccountScreen
-import com.example.specime.screens.connections.ConnectionsScreen
-import com.example.specime.screens.notifications.NotificationsScreen
+import com.example.specime.screens.contacts.main.ContactsScreen
+import com.example.specime.screens.contacts.subs.friendrequest.FriendRequestScreen
 import com.example.specime.screens.result.ResultsScreen
-import com.example.specime.screens.search.SearchScreen
-import com.example.specime.screens.test.TestScreen
+import com.example.specime.screens.contacts.subs.search.SearchScreen
+import com.example.specime.screens.disc.sub.TestScreen
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
@@ -36,7 +35,7 @@ fun NavigationController(startDestination: String) {
     Scaffold(
         bottomBar = {
             val currentRoute = currentRoute(navController)
-            if (currentRoute in listOf("disc", "result", "connections", "account")) {
+            if (currentRoute in listOf("disc", "result", "contacts", "account")) {
                 BottomNavigationBar(navController)
             }
         }
@@ -78,9 +77,9 @@ fun NavigationController(startDestination: String) {
             composable("disc") { DISCScreen(navController) }
             composable("test") { TestScreen(navController) }
             composable("result") { ResultsScreen() }
-            composable("connections") { ConnectionsScreen(navController) }
+            composable("contacts") { ContactsScreen(navController) }
             composable("search") { SearchScreen(navController) }
-            composable("notifications") { NotificationsScreen(navController) }
+            composable("requests") { FriendRequestScreen(navController) }
             composable("account") { AccountScreen(navController) }
         }
     }

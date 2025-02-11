@@ -68,12 +68,12 @@ fun SigninScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary)
+            .background(MaterialTheme.colorScheme.surface)
     ) {
         Spacer(modifier = Modifier.weight(1f))
         Text(
             "Đăng Nhập",
-            color = MaterialTheme.colorScheme.surface,
+            color = MaterialTheme.colorScheme.primary,
             style = MaterialTheme.typography.displayMedium,
             fontWeight = FontWeight.Bold
         )
@@ -130,7 +130,7 @@ fun SigninScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             HorizontalDivider(
-                color = MaterialTheme.colorScheme.surface,
+                color = MaterialTheme.colorScheme.primary,
                 thickness = 2.dp,
                 modifier = Modifier
                     .weight(1f)
@@ -138,13 +138,13 @@ fun SigninScreen(
             )
             Text(
                 "HOẶC",
-                color = MaterialTheme.colorScheme.surface,
+                color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(start = 5.dp, end = 5.dp)
             )
             HorizontalDivider(
-                color = MaterialTheme.colorScheme.surface,
+                color = MaterialTheme.colorScheme.primary,
                 thickness = 2.dp,
                 modifier = Modifier
                     .weight(1f)
@@ -154,7 +154,7 @@ fun SigninScreen(
         Spacer(modifier = Modifier.height(20.dp))
         Text(
             "Đăng nhập với",
-            color = MaterialTheme.colorScheme.surface,
+            color = MaterialTheme.colorScheme.primary,
             style = MaterialTheme.typography.titleSmall
         )
         Spacer(modifier = Modifier.height(20.dp))
@@ -176,7 +176,7 @@ fun SigninScreen(
         ) {
             Text(
                 "Bạn chưa có tài khoản? ",
-                color = MaterialTheme.colorScheme.surface,
+                color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.titleMedium
             )
             Text(
@@ -185,7 +185,8 @@ fun SigninScreen(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.clickable {
                     navController.navigate("signup")
-                }
+                },
+                fontWeight = FontWeight.Bold
             )
         }
     }

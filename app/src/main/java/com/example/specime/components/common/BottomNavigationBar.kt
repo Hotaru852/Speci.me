@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material.icons.filled.People
 //import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
@@ -40,7 +41,7 @@ fun BottomNavigationBar(navController: NavController) {
             route = "disc"
         ),
         BottomNavItem("Kết quả", iconVector = Icons.Filled.PieChart, route = "result"),
-        BottomNavItem("Bạn bè", iconVector = Icons.Filled.People, route = "connections"),
+        BottomNavItem("Liên lạc", iconVector = Icons.Filled.Contacts, route = "contacts"),
         BottomNavItem("Tài khoản", iconVector = Icons.Filled.Person, route = "account")
     )
 

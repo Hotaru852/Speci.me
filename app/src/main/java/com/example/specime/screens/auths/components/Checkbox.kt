@@ -31,26 +31,26 @@ fun CheckBox(
         modifier = Modifier.width(320.dp)
     ) {
         Surface(
-            color = if (checked) MaterialTheme.colorScheme.inversePrimary else MaterialTheme.colorScheme.surface,
+            color = if (checked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
             shadowElevation = 5.dp,
             shape = RoundedCornerShape(3.dp),
             modifier = Modifier
                 .size(16.dp)
-                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(3.dp))
+                .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(3.dp))
                 .clickable { onCheckedChange(!checked) }
         ) {
             if (checked) {
                 Icon(
                     imageVector = Icons.Filled.Check,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurface,
+                    tint = MaterialTheme.colorScheme.inversePrimary,
                 )
             }
         }
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.surface,
+            color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(start = 2.dp)
         )
     }

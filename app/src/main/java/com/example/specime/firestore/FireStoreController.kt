@@ -1,14 +1,16 @@
 package com.example.specime.firestore
 
 import android.net.Uri
-import com.example.specime.screens.notifications.Notification
-import com.example.specime.screens.notifications.NotificationType
-import com.example.specime.screens.test.Answer
-import com.example.specime.screens.test.Question
+import com.example.specime.screens.contacts.main.Friend
+import com.example.specime.screens.contacts.subs.friendrequest.FriendRequest
+import com.example.specime.screens.contacts.subs.friendrequest.PendingRequest
+import com.example.specime.screens.disc.sub.Answer
+import com.example.specime.screens.disc.sub.Question
 import com.example.specime.userrepository.UserRepository
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.storage.FirebaseStorage
 import javax.inject.Inject
@@ -17,6 +19,8 @@ class FireStoreController @Inject constructor(
     private val fireStore: FirebaseFirestore,
     private val userRepository: UserRepository,
 ) {
+    private var friendRequestListener: ListenerRegistration? = null
+
     fun searchUsersByDisplayName(
         query: String,
         callback: (success: Boolean, users: List<Map<String, Any>>?) -> Unit
@@ -43,65 +47,8 @@ class FireStoreController @Inject constructor(
             }
     }
 
-    fun fetchNotifications(callback: (success: Boolean, notifications: List<Notification>) -> Unit) {
+    fun fetchFriends(callback: (success: Boolean, friends: List<Friend>) -> Unit) {
         val userId = userRepository.getUserId() ?: return callback(false, emptyList())
-        val notificationsRef = fireStore.collection("users").document(userId).collection("notifications")
-
-        notificationsRef.get()
-            .addOnSuccessListener { querySnapshot ->
-                val notificationDocuments = querySnapshot.documents
-
-                if (notificationDocuments.isEmpty()) {
-                    callback(true, emptyList())
-                    return@addOnSuccessListener
-                }
-
-                val notifications = mutableListOf<Notification>()
-                var processedCount = 0
-
-                notificationDocuments.forEach { document ->
-                    val data = document.data
-
-                    if (data != null) {
-                        val relatedUserId = data["relatedUserId"] as? String ?: return@forEach
-                        val type = NotificationType.valueOf(data["type"] as? String ?: return@forEach)
-                        val timestamp = (data["timestamp"] as? Long) ?: return@forEach
-
-                        fireStore.collection("users").document(relatedUserId).get()
-                            .addOnSuccessListener { userDocument ->
-                                val displayName = userDocument.getString("displayName") ?: "Unknown"
-                                val profilePictureUrl = userDocument.getString("profilePictureUrl") ?: ""
-                                val notification = Notification(
-                                    relatedUserId = relatedUserId,
-                                    displayName = displayName,
-                                    profilePictureUrl = profilePictureUrl,
-                                    type = type,
-                                    timestamp = timestamp
-                                )
-                                notifications.add(notification)
-                            }
-                            .addOnCompleteListener {
-                                processedCount++
-                                if (processedCount == notificationDocuments.size) {
-                                    callback(true, notifications)
-                                }
-                            }
-                    } else {
-                        processedCount++
-                        if (processedCount == notificationDocuments.size) {
-                            callback(true, notifications)
-                        }
-                    }
-                }
-            }
-            .addOnFailureListener { exception ->
-                exception.printStackTrace()
-                callback(false, emptyList())
-            }
-    }
-
-    fun fetchFriends(callback: (success: Boolean, friends: List<Map<String, Any>>?) -> Unit) {
-        val userId = userRepository.getUserId() ?: return callback(false, null)
 
         fireStore.collection("users").document(userId).get()
             .addOnSuccessListener { document ->
@@ -110,7 +57,8 @@ class FireStoreController @Inject constructor(
                     return@addOnSuccessListener
                 }
 
-                val friendIds = (document.get("friends") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+                val friendIds =
+                    (document.get("friends") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
                 if (friendIds.isEmpty()) {
                     callback(true, emptyList())
                     return@addOnSuccessListener
@@ -118,7 +66,7 @@ class FireStoreController @Inject constructor(
 
                 val friendsCollection = fireStore.collection("users")
                 val batches = friendIds.chunked(10)
-                val friendsList = mutableListOf<Map<String, Any>>()
+                val friendsList = mutableListOf<Friend>()
                 var completedBatches = 0
 
                 batches.forEach { batch ->
@@ -126,8 +74,12 @@ class FireStoreController @Inject constructor(
                         .get()
                         .addOnSuccessListener { querySnapshot ->
                             querySnapshot.documents.forEach { doc ->
-                                val data = doc.data ?: emptyMap<String, Any>()
-                                friendsList.add(data + ("userId" to doc.id))
+                                val friend = Friend(
+                                    userId = doc.id,
+                                    displayName = doc.getString("displayName") ?: "Unknown",
+                                    profilePictureUrl = doc.getString("profilePictureUrl") ?: ""
+                                )
+                                friendsList.add(friend)
                             }
                             completedBatches++
                             if (completedBatches == batches.size) {
@@ -138,14 +90,14 @@ class FireStoreController @Inject constructor(
                             e.printStackTrace()
                             completedBatches++
                             if (completedBatches == batches.size) {
-                                callback(true, friendsList)
+                                callback(true, friendsList) // Return whatever was fetched
                             }
                         }
                 }
             }
             .addOnFailureListener { e ->
                 e.printStackTrace()
-                callback(false, null)
+                callback(false, emptyList())
             }
     }
 
@@ -153,19 +105,225 @@ class FireStoreController @Inject constructor(
         callback: (success: Boolean, friends: List<String>?, pendings: List<String>?, requests: List<String>?) -> Unit
     ) {
         val userId = userRepository.getUserId() ?: return
+        val userRef = fireStore.collection("users").document(userId)
 
-        fireStore.collection("users")
-            .document(userId)
-            .get()
-            .addOnSuccessListener { document ->
-                if (document.exists()) {
-                    val friends = (document.get("friends") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
-                    val pendings = (document.get("pendings") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
-                    val requests = (document.get("requests") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+        userRef.get().addOnSuccessListener { document ->
+            val friends =
+                (document.get("friends") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+            val pendingsRef = userRef.collection("pendings")
+            val requestsRef = userRef.collection("requests")
 
+            pendingsRef.get().addOnSuccessListener { pendingSnapshot ->
+                val pendings = pendingSnapshot.documents.map { it.id }
+
+                requestsRef.get().addOnSuccessListener { requestsSnapshot ->
+                    val requests = requestsSnapshot.documents.map { it.id }
                     callback(true, friends, pendings, requests)
                 }
             }
+        }
+    }
+
+    fun fetchFriendRequests(callback: (success: Boolean, requests: List<FriendRequest>) -> Unit) {
+        val userId = userRepository.getUserId() ?: return callback(false, emptyList())
+
+        fireStore.collection("users").document(userId).collection("requests")
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                if (querySnapshot.isEmpty) {
+                    callback(true, emptyList())
+                    return@addOnSuccessListener
+                }
+
+                val requestEntries = querySnapshot.documents.mapNotNull { doc ->
+                    val senderId = doc.id
+                    val timestamp = doc.getLong("timestamp") ?: return@mapNotNull null
+                    senderId to timestamp
+                }
+
+                val senderIds = requestEntries.map { it.first }
+                if (senderIds.isEmpty()) {
+                    callback(true, emptyList())
+                    return@addOnSuccessListener
+                }
+
+                val batches = senderIds.chunked(10)
+                val requestsList = mutableListOf<FriendRequest>()
+                var completedBatches = 0
+
+                batches.forEach { batch ->
+                    fireStore.collection("users")
+                        .whereIn(FieldPath.documentId(), batch)
+                        .get()
+                        .addOnSuccessListener { userQuerySnapshot ->
+                            userQuerySnapshot.documents.forEach { doc ->
+                                val senderId = doc.id
+                                val displayName = doc.getString("displayName") ?: ""
+                                val profilePictureUrl = doc.getString("profilePictureUrl") ?: ""
+                                val timestamp =
+                                    requestEntries.find { it.first == senderId }?.second ?: 0L
+
+                                requestsList.add(
+                                    FriendRequest(
+                                        senderId = senderId,
+                                        displayName = displayName,
+                                        profilePictureUrl = profilePictureUrl,
+                                        timestamp = timestamp
+                                    )
+                                )
+                            }
+                            completedBatches++
+                            if (completedBatches == batches.size) {
+                                callback(true, requestsList.sortedBy { it.timestamp })
+                            }
+                        }
+                        .addOnFailureListener {
+                            it.printStackTrace()
+                            completedBatches++
+                            if (completedBatches == batches.size) {
+                                callback(false, emptyList())
+                            }
+                        }
+                }
+            }
+            .addOnFailureListener {
+                it.printStackTrace()
+                callback(false, emptyList())
+            }
+    }
+
+    fun fetchPendings(callback: (success: Boolean, pendings: List<PendingRequest>) -> Unit) {
+        val userId = userRepository.getUserId() ?: return callback(false, emptyList())
+
+        fireStore.collection("users").document(userId).collection("pendings")
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                if (querySnapshot.isEmpty) {
+                    callback(true, emptyList())
+                    return@addOnSuccessListener
+                }
+
+                val pendingEntries = querySnapshot.documents.mapNotNull { doc ->
+                    val recipientId = doc.id
+                    val timestamp = doc.getLong("timestamp") ?: return@mapNotNull null
+                    recipientId to timestamp
+                }
+
+                val recipientIds = pendingEntries.map { it.first }
+                if (recipientIds.isEmpty()) {
+                    callback(true, emptyList())
+                    return@addOnSuccessListener
+                }
+
+                val batches = recipientIds.chunked(10)
+                val pendingList = mutableListOf<PendingRequest>()
+                var completedBatches = 0
+
+                batches.forEach { batch ->
+                    fireStore.collection("users")
+                        .whereIn(FieldPath.documentId(), batch)
+                        .get()
+                        .addOnSuccessListener { userQuerySnapshot ->
+                            userQuerySnapshot.documents.forEach { doc ->
+                                val recipientId = doc.id
+                                val displayName = doc.getString("displayName") ?: "Unknown"
+                                val profilePictureUrl = doc.getString("profilePictureUrl") ?: ""
+                                val timestamp =
+                                    pendingEntries.find { it.first == recipientId }?.second ?: 0L
+
+                                pendingList.add(
+                                    PendingRequest(
+                                        recipientId = recipientId,
+                                        displayName = displayName,
+                                        profilePictureUrl = profilePictureUrl,
+                                        timestamp = timestamp
+                                    )
+                                )
+                            }
+                            completedBatches++
+                            if (completedBatches == batches.size) {
+                                callback(true, pendingList.sortedBy { it.timestamp })
+                            }
+                        }
+                        .addOnFailureListener {
+                            it.printStackTrace()
+                            completedBatches++
+                            if (completedBatches == batches.size) {
+                                callback(false, emptyList())
+                            }
+                        }
+                }
+            }
+            .addOnFailureListener {
+                it.printStackTrace()
+                callback(false, emptyList())
+            }
+    }
+
+    fun fetchFriendRequestCount(callback: (success: Boolean, count: Int) -> Unit) {
+        val userId = userRepository.getUserId() ?: return callback(false, 0)
+        val requestsRef = fireStore.collection("users").document(userId).collection("requests")
+
+        requestsRef.get()
+            .addOnSuccessListener { querySnapshot ->
+                callback(true, querySnapshot.size())
+            }
+            .addOnFailureListener { exception ->
+                exception.printStackTrace()
+                callback(false, 0)
+            }
+    }
+
+    fun listenForFriendRequests(onUpdate: (count: Int) -> Unit) {
+        val userId = userRepository.getUserId() ?: return
+        val userRef = fireStore.collection("users")
+            .document(userId)
+            .collection("requests")
+
+        friendRequestListener?.remove()
+
+        friendRequestListener = userRef.addSnapshotListener { snapshot, _ ->
+            if (snapshot != null) {
+                onUpdate(snapshot.size())
+            }
+        }
+    }
+
+    fun listenForFriendUpdates(onFriendsUpdated: (List<Friend>) -> Unit) {
+        val userId = userRepository.getUserId() ?: return
+
+        fireStore.collection("users").document(userId)
+            .addSnapshotListener { snapshot, _ ->
+                if (snapshot != null) {
+                    val friendIds =
+                        (snapshot.get("friends") as? List<*>)?.filterIsInstance<String>()
+                            ?: emptyList()
+
+                    if (friendIds.isEmpty()) {
+                        onFriendsUpdated(emptyList())
+                        return@addSnapshotListener
+                    }
+
+                    fireStore.collection("users")
+                        .whereIn(FieldPath.documentId(), friendIds)
+                        .get()
+                        .addOnSuccessListener { querySnapshot ->
+                            val friends = querySnapshot.documents.mapNotNull { doc ->
+                                Friend(
+                                    userId = doc.id,
+                                    displayName = doc.getString("displayName") ?: "",
+                                    profilePictureUrl = doc.getString("profilePictureUrl") ?: ""
+                                )
+                            }
+                            onFriendsUpdated(friends)
+                        }
+                }
+            }
+    }
+
+    fun removeFriendRequestListener() {
+        friendRequestListener?.remove()
+        friendRequestListener = null
     }
 
     fun sendFriendRequest(
@@ -173,26 +331,20 @@ class FireStoreController @Inject constructor(
         callback: (success: Boolean) -> Unit
     ) {
         val userId = userRepository.getUserId() ?: return callback(false)
-        val userRef = fireStore.collection("users").document(userId)
-        val recipientRef = fireStore.collection("users").document(recipientId)
-        val recipientNotificationsRef = recipientRef.collection("notifications").document()
+        val userPendingRef = fireStore.collection("users").document(userId).collection("pendings")
+            .document(recipientId)
+        val recipientRequestRef =
+            fireStore.collection("users").document(recipientId).collection("requests")
+                .document(userId)
 
-        val notificationData = mapOf(
-            "relatedUserId" to userId,
-            "type" to NotificationType.FRIEND_REQUEST.name,
-            "timestamp" to System.currentTimeMillis()
-        )
+        val data = mapOf("timestamp" to System.currentTimeMillis())
 
         fireStore.runBatch { batch ->
-            batch.update(userRef, "requests", FieldValue.arrayUnion(recipientId))
-            batch.update(recipientRef, "pendings", FieldValue.arrayUnion(userId))
-            batch.set(recipientNotificationsRef, notificationData)
+            batch.set(userPendingRef, data)
+            batch.set(recipientRequestRef, data)
         }.addOnSuccessListener {
             callback(true)
-        }.addOnFailureListener { exception ->
-            exception.printStackTrace()
-            callback(false)
-        }
+        }.addOnFailureListener { callback(false) }
     }
 
     fun acceptFriendRequest(
@@ -202,75 +354,35 @@ class FireStoreController @Inject constructor(
         val userId = userRepository.getUserId() ?: return callback(false)
         val senderRef = fireStore.collection("users").document(senderId)
         val userRef = fireStore.collection("users").document(userId)
-        val senderNotificationsRef = senderRef.collection("notifications").document()
-        val userNotificationsRef = userRef.collection("notifications")
+        val senderPendingRef = senderRef.collection("pendings").document(userId)
+        val userRequestRef = userRef.collection("requests").document(senderId)
 
-        val notificationData = mapOf(
-            "relatedUserId" to userId,
-            "type" to NotificationType.FRIEND_REQUEST_ACCEPTED.name,
-            "timestamp" to System.currentTimeMillis()
-        )
-
-        userNotificationsRef
-            .whereEqualTo("relatedUserId", senderId)
-            .whereEqualTo("type", NotificationType.FRIEND_REQUEST.name)
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                fireStore.runBatch { batch ->
-                    batch.update(userRef, "pendings", FieldValue.arrayRemove(senderId))
-                    batch.update(senderRef, "requests", FieldValue.arrayRemove(userId))
-                    batch.update(userRef, "friends", FieldValue.arrayUnion(senderId))
-                    batch.update(senderRef, "friends", FieldValue.arrayUnion(userId))
-                    batch.set(senderNotificationsRef, notificationData)
-
-                    for (document in querySnapshot.documents) {
-                        batch.delete(document.reference)
-                    }
-                }.addOnSuccessListener {
-                    callback(true)
-                }.addOnFailureListener { exception ->
-                    exception.printStackTrace()
-                    callback(false)
-                }
-            }
-            .addOnFailureListener { exception ->
-                exception.printStackTrace()
-                callback(false)
-            }
+        fireStore.runBatch { batch ->
+            batch.delete(senderPendingRef)
+            batch.delete(userRequestRef)
+            batch.update(userRef, "friends", FieldValue.arrayUnion(senderId))
+            batch.update(senderRef, "friends", FieldValue.arrayUnion(userId))
+        }.addOnSuccessListener {
+            callback(true)
+        }.addOnFailureListener { callback(false) }
     }
 
-    fun rejectFriendRequest(
+    fun declineFriendRequest(
         senderId: String,
         callback: (success: Boolean) -> Unit
     ) {
         val userId = userRepository.getUserId() ?: return callback(false)
-        val userRef = fireStore.collection("users").document(userId)
-        val senderRef = fireStore.collection("users").document(senderId)
-        val userNotificationsRef = userRef.collection("notifications")
+        val senderPendingRef =
+            fireStore.collection("users").document(senderId).collection("pendings").document(userId)
+        val userRequestRef =
+            fireStore.collection("users").document(userId).collection("requests").document(senderId)
 
-        userNotificationsRef
-            .whereEqualTo("relatedUserId", senderId)
-            .whereEqualTo("type", "FRIEND_REQUEST")
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                fireStore.runBatch { batch ->
-                    batch.update(userRef, "pendings", FieldValue.arrayRemove(senderId))
-                    batch.update(senderRef, "requests", FieldValue.arrayRemove(userId))
-
-                    for (document in querySnapshot.documents) {
-                        batch.delete(document.reference)
-                    }
-                }.addOnSuccessListener {
-                    callback(true)
-                }.addOnFailureListener { exception ->
-                    exception.printStackTrace()
-                    callback(false)
-                }
-            }
-            .addOnFailureListener { exception ->
-                exception.printStackTrace()
-                callback(false)
-            }
+        fireStore.runBatch { batch ->
+            batch.delete(senderPendingRef)
+            batch.delete(userRequestRef)
+        }.addOnSuccessListener {
+            callback(true)
+        }.addOnFailureListener { callback(false) }
     }
 
     fun removeFriend(
@@ -292,37 +404,23 @@ class FireStoreController @Inject constructor(
         }
     }
 
-    fun cancelFriendRequest(
+    fun retrieveFriendRequest(
         recipientId: String,
         callback: (success: Boolean) -> Unit
     ) {
         val userId = userRepository.getUserId() ?: return callback(false)
-        val userRef = fireStore.collection("users").document(userId)
-        val recipientRef = fireStore.collection("users").document(recipientId)
-        val recipientNotificationsRef = recipientRef.collection("notifications")
+        val userPendingRef = fireStore.collection("users").document(userId).collection("pendings")
+            .document(recipientId)
+        val recipientRequestRef =
+            fireStore.collection("users").document(recipientId).collection("requests")
+                .document(userId)
 
-        recipientNotificationsRef
-            .whereEqualTo("relatedUserId", userId)
-            .whereEqualTo("type", NotificationType.FRIEND_REQUEST.name)
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                fireStore.runBatch { batch ->
-                    batch.update(userRef, "requests", FieldValue.arrayRemove(recipientId))
-                    batch.update(recipientRef, "pendings", FieldValue.arrayRemove(userId))
-                    for (document in querySnapshot.documents) {
-                        batch.delete(document.reference)
-                    }
-                }.addOnSuccessListener {
-                    callback(true)
-                }.addOnFailureListener { exception ->
-                    exception.printStackTrace()
-                    callback(false)
-                }
-            }
-            .addOnFailureListener { exception ->
-                exception.printStackTrace()
-                callback(false)
-            }
+        fireStore.runBatch { batch ->
+            batch.delete(userPendingRef)
+            batch.delete(recipientRequestRef)
+        }.addOnSuccessListener {
+            callback(true)
+        }.addOnFailureListener { callback(false) }
     }
 
     fun fetchQuestions(callback: (questions: List<Question>?, error: String?) -> Unit) {

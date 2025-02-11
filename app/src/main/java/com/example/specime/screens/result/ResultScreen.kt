@@ -41,67 +41,59 @@ fun ResultsScreen(
         "C" to Color(0xFF2196F3)
     )
 
-    if (state.isLoading) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.primary)
-        ) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
+    ) {
+        if (state.isLoading) {
             CircularProgressIndicator(
-                color = MaterialTheme.colorScheme.surface,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(50.dp)
             )
-        }
-    } else {
-        if (state.testTaken) {
-            val text = buildAnnotatedString {
-                append("Kết quả phân tích ")
-                append(
-                    AnnotatedString(
-                        text = "D",
-                        spanStyle = SpanStyle(
-                            color = Color(0xFFFF4D4D)
+        } else {
+            if (state.testTaken) {
+                val text = buildAnnotatedString {
+                    append("Kết quả phân tích ")
+                    append(
+                        AnnotatedString(
+                            text = "D",
+                            spanStyle = SpanStyle(
+                                color = Color(0xFFFF4D4D)
+                            )
                         )
                     )
-                )
-                append(
-                    AnnotatedString(
-                        text = "I",
-                        spanStyle = SpanStyle(
-                            color = Color(0xFFFFD700)
+                    append(
+                        AnnotatedString(
+                            text = "I",
+                            spanStyle = SpanStyle(
+                                color = Color(0xFFFFD700)
+                            )
                         )
                     )
-                )
-                append(
-                    AnnotatedString(
-                        text = "S",
-                        spanStyle = SpanStyle(
-                            color = Color(0xFF4CAF50)
+                    append(
+                        AnnotatedString(
+                            text = "S",
+                            spanStyle = SpanStyle(
+                                color = Color(0xFF4CAF50)
+                            )
                         )
                     )
-                )
-                append(
-                    AnnotatedString(
-                        text = "C",
-                        spanStyle = SpanStyle(
-                            color = Color(0xFF2196F3)
+                    append(
+                        AnnotatedString(
+                            text = "C",
+                            spanStyle = SpanStyle(
+                                color = Color(0xFF2196F3)
+                            )
                         )
                     )
-                )
-            }
+                }
 
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.primary)
-            ) {
                 Text(
                     text,
-                    color = MaterialTheme.colorScheme.surface,
+                    color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 50.dp)
@@ -110,7 +102,7 @@ fun ResultsScreen(
                 Row {
                     Text(
                         "Bạn thuộc nhóm tính cách ",
-                        color = MaterialTheme.colorScheme.surface,
+                        color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.titleLarge,
                     )
                     state.personality?.forEach { trait ->
@@ -127,10 +119,10 @@ fun ResultsScreen(
                 state.discDescriptions[state.personality]?.let {
                     Text(
                         text = "Bạn là $it",
-                        color = MaterialTheme.colorScheme.surface,
+                        color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.titleLarge,
                         textAlign = TextAlign.Center
-                        )
+                    )
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 state.result?.let {
@@ -139,18 +131,10 @@ fun ResultsScreen(
                     )
                 }
                 Spacer(modifier = Modifier.weight(1f))
-            }
-        } else {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.primary)
-            ) {
+            } else {
                 Text(
                     "Bạn chưa có kết quả nào",
-                    color = MaterialTheme.colorScheme.surface,
+                    color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
