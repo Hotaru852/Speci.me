@@ -309,31 +309,68 @@ class FireStoreController @Inject constructor(
     }
 
     fun fetchTestResults(callback: (results: List<TestResult>?) -> Unit) {
-        val userId = userRepository.getUserId()!!
+        val userId = userRepository.getUserId() ?: return callback(null)
 
         fireStore.collection("test_results")
             .whereEqualTo("userId", userId)
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .get()
             .addOnSuccessListener { querySnapshot ->
-                val results = querySnapshot.documents.mapNotNull { document ->
-                    val resultData = document.get("result") as? Map<*, *>
-                    val parsedResult = resultData?.mapNotNull { (key, value) ->
-                        val keyStr = key as? String
-                        val valueInt = (value as? Long)?.toInt()
-                        if (keyStr != null && valueInt != null) keyStr to valueInt else null
-                    }?.toMap() ?: emptyMap()
-
-                    val trait = document.getString("trait")
-                    val timestamp = document.getTimestamp("timestamp")
-                    val detailId = document.getString("resultDetailId")
-                    val groupName = document.getString("groupName")
-
-                    if (resultData != null) {
-                        TestResult(parsedResult, trait, timestamp, detailId, groupName)
-                    } else null
+                val docs = querySnapshot.documents
+                val rawResults = docs.mapNotNull { doc ->
+                    val resultData = doc.get("result") as? Map<*, *> ?: return@mapNotNull null
+                    val parsedResult = resultData.mapNotNull { (k, v) ->
+                        val key = k as? String
+                        val value = (v as? Long)?.toInt()
+                        if (key != null && value != null) key to value else null
+                    }.toMap()
+                    val trait = doc.getString("trait")
+                    val timestamp = doc.getTimestamp("timestamp")
+                    val detailId = doc.getString("resultDetailId")
+                    val groupId = doc.getString("groupId")
+                    TestResultRaw(parsedResult, trait, timestamp, detailId, groupId)
                 }
-                callback(results)
+
+                val groupIds = rawResults.mapNotNull { it.groupId }.distinct()
+                if (groupIds.isEmpty()) {
+                    callback(rawResults.map { it.toTestResult(null) })
+                    return@addOnSuccessListener
+                }
+
+                val batches = groupIds.chunked(10)
+                val groupNameMap = mutableMapOf<String, String>()
+                var batchesFetched = 0
+
+                batches.forEach { batch ->
+                    fireStore.collection("groups")
+                        .whereIn(FieldPath.documentId(), batch)
+                        .get()
+                        .addOnSuccessListener { snap ->
+                            for (doc in snap.documents) {
+                                doc.getString("groupName")?.let { name ->
+                                    groupNameMap[doc.id] = name
+                                }
+                            }
+                            batchesFetched++
+                            if (batchesFetched == batches.size) {
+                                val finalResults = rawResults.map { raw ->
+                                    val name = raw.groupId?.let { groupNameMap[it] }
+                                    raw.toTestResult(name)
+                                }
+                                callback(finalResults)
+                            }
+                        }
+                        .addOnFailureListener {
+                            batchesFetched++
+                            if (batchesFetched == batches.size) {
+                                val finalResults = rawResults.map { raw ->
+                                    val name = raw.groupId?.let { groupNameMap[it] }
+                                    raw.toTestResult(name)
+                                }
+                                callback(finalResults)
+                            }
+                        }
+                }
             }
     }
 
@@ -366,7 +403,7 @@ class FireStoreController @Inject constructor(
             }
     }
 
-    fun fetchGroupInformations(
+    fun fetchGroupTestResults(
         groupId: String,
         callback: (groupName: String?, currentUserLatestTestResult: TestResult?, otherUserResults: List<MemberTestResult>) -> Unit
     ) {
@@ -374,16 +411,15 @@ class FireStoreController @Inject constructor(
 
         fireStore.collection("groups").document(groupId)
             .get()
-            .addOnSuccessListener { groupDoc ->
+            .addOnSuccessListener groupDocListener@ { groupDoc ->
                 val groupName = groupDoc.getString("groupName")
 
                 fireStore.collection("test_results")
                     .whereEqualTo("groupId", groupId)
                     .orderBy("timestamp", Query.Direction.DESCENDING)
                     .get()
-                    .addOnSuccessListener { testSnapshot ->
+                    .addOnSuccessListener testResultsListener@ { testSnapshot ->
                         val latestResultsByUser = mutableMapOf<String, DocumentSnapshot>()
-
                         for (doc in testSnapshot.documents) {
                             val userId = doc.getString("userId") ?: continue
                             if (!latestResultsByUser.containsKey(userId)) {
@@ -392,42 +428,75 @@ class FireStoreController @Inject constructor(
                         }
 
                         var currentUserLatestTestResult: TestResult? = null
-                        val otherUserResults = mutableListOf<MemberTestResult>()
+                        val rawOtherUserResults = mutableMapOf<String, MemberTestResult>()
+                        val otherUserIds = mutableListOf<String>()
 
                         for ((userId, doc) in latestResultsByUser) {
                             val resultData = doc.get("result") as? Map<*, *>
-                            val parsedResult = resultData?.mapNotNull { (key, value) ->
-                                val keyStr = key as? String
-                                val valueInt = (value as? Long)?.toInt()
-                                if (keyStr != null && valueInt != null) keyStr to valueInt else null
+                            val parsedResult = resultData?.mapNotNull { (k, v) ->
+                                val key = k as? String
+                                val value = (v as? Long)?.toInt()
+                                if (key != null && value != null) key to value else null
                             }?.toMap() ?: emptyMap()
 
                             val trait = doc.getString("trait")
+                            val timestamp = doc.getTimestamp("timestamp")
 
                             if (userId == currentUserId) {
                                 currentUserLatestTestResult = TestResult(
                                     result = parsedResult,
                                     trait = trait,
-                                    timestamp = null,
+                                    timestamp = timestamp,
                                     detailId = null,
                                     groupName = null
                                 )
                             } else {
-                                val username = doc.getString("username") ?: "Unknown"
-                                val email = doc.getString("email") ?: "Unknown"
-                                otherUserResults.add(
-                                    MemberTestResult(
-                                        trait = trait,
-                                        username = username,
-                                        email = email
-                                    )
+                                otherUserIds.add(userId)
+                                rawOtherUserResults[userId] = MemberTestResult(
+                                    trait = trait,
+                                    username = "",
+                                    email = ""
                                 )
                             }
                         }
-                        callback(groupName, currentUserLatestTestResult, otherUserResults)
+
+                        if (otherUserIds.isEmpty()) {
+                            callback(groupName, currentUserLatestTestResult, rawOtherUserResults.values.toList())
+                            return@testResultsListener
+                        }
+
+                        val batches = otherUserIds.chunked(10)
+                        val userInfoMap = mutableMapOf<String, Pair<String, String>>()
+                        var batchesProcessed = 0
+
+                        for (batch in batches) {
+                            fireStore.collection("users")
+                                .whereIn(FieldPath.documentId(), batch)
+                                .get()
+                                .addOnSuccessListener { userSnapshot ->
+                                    for (userDoc in userSnapshot.documents) {
+                                        val uid = userDoc.id
+                                        val displayName = userDoc.getString("displayName") ?: "Unknown"
+                                        val email = userDoc.getString("email") ?: "Unknown"
+                                        userInfoMap[uid] = Pair(displayName, email)
+                                    }
+                                    batchesProcessed++
+                                    if (batchesProcessed == batches.size) {
+                                        for (uid in otherUserIds) {
+                                            val (displayName, email) = userInfoMap[uid] ?: Pair("Unknown", "Unknown")
+                                            rawOtherUserResults[uid] = rawOtherUserResults[uid]?.copy(
+                                                username = displayName,
+                                                email = email
+                                            ) ?: MemberTestResult(trait = null, username = displayName, email = email)
+                                        }
+                                        callback(groupName, currentUserLatestTestResult, rawOtherUserResults.values.toList())
+                                    }
+                                }
+                        }
                     }
             }
     }
+
 
     private fun saveProfileImageUrl(
         downloadUrl: String,
@@ -539,5 +608,21 @@ class FireStoreController @Inject constructor(
                     callback(true, email, displayName, birthday, profilePictureUrl, isGoogleAccount)
                 }
             }
+    }
+
+    private data class TestResultRaw(
+        val result: Map<String, Int>,
+        val trait: String?,
+        val timestamp: com.google.firebase.Timestamp?,
+        val detailId: String?,
+        val groupId: String?
+    ) {
+        fun toTestResult(groupName: String?) = TestResult(
+            result = result,
+            trait = trait,
+            timestamp = timestamp,
+            detailId = detailId,
+            groupName = groupName
+        )
     }
 }

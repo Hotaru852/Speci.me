@@ -22,7 +22,7 @@ class GroupResultViewModel @Inject constructor(
     fun handleAction(action: GroupResultAction) {
         when (action) {
             is GroupResultAction.Init -> {
-                fireStoreController.fetchGroupInformations(action.groupId) {
+                fireStoreController.fetchGroupTestResults(action.groupId) {
                     groupName, currentUserLatestTestResult, memberTestResults ->
                     state = state.copy(
                         groupName = groupName,

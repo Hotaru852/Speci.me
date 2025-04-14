@@ -72,7 +72,7 @@ fun GroupResultScreen(
                     },
                     navigationIcon = {
                         IconButton(
-                            onClick = { navController.navigate("home") }
+                            onClick = { navController.popBackStack() }
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.ArrowBackIosNew,

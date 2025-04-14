@@ -75,7 +75,7 @@ class GroupCreationViewModel @Inject constructor(
                     sendCustomEmail(
                         recipient = email,
                         subject = "Speci.me",
-                        text = "$userDisplayName đã thêm bạn vào nhóm ${state.groupName}. Hãy tải ứng dụng Speci.me về máy để tham gia làm bài đánh giá tính cách DISC: 👉 https://github.com/Hotaru852/Speci.me/releases".trimIndent()
+                        text = "$userDisplayName đã thêm bạn vào nhóm ${state.groupName}. Hãy tải ứng dụng Speci.me về máy để tham gia làm bài đánh giá tính cách DISC: 👉 https://github.com/Hotaru852/Speci.me/releases"
                     )
                 }
 
