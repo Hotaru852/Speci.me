@@ -3,26 +3,18 @@ package com.example.specime.navigations
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
 import androidx.navigation.NavType
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
-import com.example.specime.components.common.BottomNavigationBar
-import com.example.specime.screens.auths.signin.SigninScreen
-import com.example.specime.screens.auths.signup.SignupScreen
-import com.example.specime.screens.auths.confirmation.ConfirmationScreen
-import com.example.specime.screens.auths.changepassword.ChangePasswordSceen
-import com.example.specime.screens.disc.main.DISCScreen
+import com.example.specime.screens.group.groupcreation.GroupCreationScreen
+import com.example.specime.screens.authentication.signin.SigninScreen
+import com.example.specime.screens.authentication.signup.SignupScreen
+import com.example.specime.screens.authentication.changepassword.ChangePasswordSceen
 import com.example.specime.screens.account.AccountScreen
-import com.example.specime.screens.contacts.main.ContactsScreen
-import com.example.specime.screens.contacts.subs.friendrequest.FriendRequestScreen
-import com.example.specime.screens.result.ResultsScreen
-import com.example.specime.screens.contacts.subs.search.SearchScreen
-import com.example.specime.screens.disc.sub.TestScreen
+import com.example.specime.screens.disc.test.TestScreen
+import com.example.specime.screens.disc.testdetail.TestDetailScreen
+import com.example.specime.screens.group.groupresult.GroupResultScreen
+import com.example.specime.screens.home.HomeScreen
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
@@ -32,61 +24,60 @@ import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 fun NavigationController(startDestination: String) {
     val navController = rememberAnimatedNavController()
 
-    Scaffold(
-        bottomBar = {
-            val currentRoute = currentRoute(navController)
-            if (currentRoute in listOf("disc", "result", "contacts", "account")) {
-                BottomNavigationBar(navController)
-            }
+    AnimatedNavHost(
+        navController = navController,
+        startDestination = startDestination,
+        enterTransition = { EnterTransition.None },
+        exitTransition = { ExitTransition.None },
+        popEnterTransition = { EnterTransition.None },
+        popExitTransition = { ExitTransition.None }
+    ) {
+        composable("login") { SigninScreen(navController) }
+        composable("signup") { SignupScreen(navController) }
+        composable("changePassword") { ChangePasswordSceen(navController) }
+        composable(
+            route = "test?groupName={groupName}&groupId={groupId}",
+            arguments = listOf(
+                navArgument("groupName") {
+                    type = NavType.StringType
+                    defaultValue = null
+                    nullable = true
+                },
+                navArgument("groupId") {
+                    type = NavType.StringType
+                    defaultValue = null
+                    nullable = true
+                }
+            )
+        ) { backStackEntry ->
+            TestScreen(
+                navController = navController,
+                groupName = backStackEntry.arguments?.getString("groupName"),
+                groupId = backStackEntry.arguments?.getString("groupId")
+            )
         }
-    ) { innerPadding ->
-        AnimatedNavHost(
-            navController = navController,
-            startDestination = startDestination,
-            enterTransition = { EnterTransition.None },
-            exitTransition = { ExitTransition.None },
-            popEnterTransition = { EnterTransition.None },
-            popExitTransition = { ExitTransition.None },
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            composable("login") { SigninScreen(navController) }
-            composable("signup") { SignupScreen(navController) }
-            composable("changePassword") { ChangePasswordSceen(navController) }
-            composable(
-                "confirmation/{title}/{message}/{buttonText}/{route}",
-                arguments = listOf(
-                    navArgument("title") { type = NavType.StringType },
-                    navArgument("message") { type = NavType.StringType },
-                    navArgument("buttonText") { type = NavType.StringType },
-                    navArgument("route") { type = NavType.StringType }
-                )
-            ) { backStackEntry ->
-                val title = backStackEntry.arguments?.getString("title") ?: ""
-                val message = backStackEntry.arguments?.getString("message")
-                val buttonText = backStackEntry.arguments?.getString("buttonText") ?: ""
-                val navigateToRoute = backStackEntry.arguments?.getString("route") ?: ""
-
-                ConfirmationScreen(
-                    navController = navController,
-                    title = title,
-                    message = message,
-                    buttonText = buttonText,
-                    route = navigateToRoute
-                )
-            }
-            composable("disc") { DISCScreen(navController) }
-            composable("test") { TestScreen(navController) }
-            composable("result") { ResultsScreen() }
-            composable("contacts") { ContactsScreen(navController) }
-            composable("search") { SearchScreen(navController) }
-            composable("requests") { FriendRequestScreen(navController) }
-            composable("account") { AccountScreen(navController) }
+        composable(
+            route = "testDetail/{resultDetailId}",
+            arguments = listOf(navArgument("resultDetailId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val resultDetailId = backStackEntry.arguments?.getString("resultDetailId") ?: ""
+            TestDetailScreen(
+                navController = navController,
+                resultDetailId = resultDetailId
+            )
         }
+        composable("groupCreation") { GroupCreationScreen(navController) }
+        composable(
+            route = "groupResult/{groupId}",
+            arguments = listOf(navArgument("groupId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val groupId = backStackEntry.arguments?.getString("groupId") ?: ""
+            GroupResultScreen(
+                navController = navController,
+                groupId = groupId
+            )
+        }
+        composable("account") { AccountScreen(navController) }
+        composable("home") { HomeScreen(navController) }
     }
-}
-
-@Composable
-fun currentRoute(navController: NavController): String? {
-    val navBackStackEntry = navController.currentBackStackEntryAsState().value
-    return navBackStackEntry?.destination?.route
 }

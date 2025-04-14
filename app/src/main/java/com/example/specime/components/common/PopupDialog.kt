@@ -41,6 +41,7 @@ fun PopupDialog(
     confirmationMessage: String = "",
     value: String,
     label: String,
+    buttonText: String = " XÁC NHẬN",
     leadingIcon: ImageVector,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit,
@@ -51,9 +52,9 @@ fun PopupDialog(
     BasicAlertDialog(
         onDismissRequest = { onDismiss() },
         modifier = Modifier
-            .height(250.dp)
+            .height(230.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(color = MaterialTheme.colorScheme.primaryContainer)
+            .background(color = MaterialTheme.colorScheme.surface)
     ) {
         Box(
             modifier = Modifier.height(250.dp)
@@ -64,28 +65,28 @@ fun PopupDialog(
 
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 25.dp)
+                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 15.dp)
                 ) {
                     Row {
                         Spacer(modifier = Modifier.weight(1f))
                         Icon(
                             imageVector = Icons.Filled.Clear,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.surface,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.clickable { onDismiss() }
                         )
                     }
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.weight(1f))
                     LottieAnimation(
                         composition = composition,
                         progress = { progress },
                         modifier = Modifier.size(140.dp),
                         contentScale = ContentScale.Fit
                     )
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.weight(1f))
                     Text(
                         confirmationMessage,
-                        color = MaterialTheme.colorScheme.surface,
+                        color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -93,25 +94,25 @@ fun PopupDialog(
             } else {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 20.dp)
+                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 15.dp)
                 ) {
                     Row {
                         Spacer(modifier = Modifier.weight(1f))
                         Icon(
                             imageVector = Icons.Filled.Clear,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.surface,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.clickable { onDismiss() }
                         )
                     }
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.weight(1f))
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = label,
-                            color = MaterialTheme.colorScheme.surface,
-                            style = MaterialTheme.typography.titleLarge
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.labelLarge
                         )
                         Spacer(modifier = Modifier.weight(1f))
                     }
@@ -122,11 +123,11 @@ fun PopupDialog(
                         errorMessage = errorMessage,
                         onValueChange = onValueChange,
                         leadingIcon = leadingIcon,
-                        rounded = 0
+                        rounded = 7
                     )
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.weight(1f))
                     FlexibleButton(
-                        text = "XÁC NHẬN",
+                        text = buttonText,
                         width = 320,
                         height = 45,
                         onClick = {
@@ -134,7 +135,7 @@ fun PopupDialog(
                                 onConfirm(value)
                             }
                         },
-                        rounded = 0
+                        rounded = 40
                     )
                 }
 

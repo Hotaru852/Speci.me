@@ -25,19 +25,22 @@ fun FlexibleButton(
     onClick: () -> Unit,
     rounded: Int,
     outlined: Boolean = true,
-    containerColor: Color = MaterialTheme.colorScheme.surface,
+    containerColor: Color = Color.White,
     contentColor: Color = MaterialTheme.colorScheme.primary,
-    textStyle: TextStyle = MaterialTheme.typography.titleLarge
+    outlineColor: Color = MaterialTheme.colorScheme.primary,
+    textStyle: TextStyle = MaterialTheme.typography.titleLarge,
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier
 ) {
     Surface(
-        modifier = Modifier
+        modifier = modifier
             .width(width.dp)
             .height(height.dp)
             .then(
                 if (outlined) {
                     Modifier.border(
                         width = 1.dp,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = outlineColor,
                         shape = RoundedCornerShape(rounded.dp)
                     )
                 } else {
@@ -59,7 +62,8 @@ fun FlexibleButton(
                 containerColor = containerColor,
                 contentColor = contentColor
             ),
-            elevation = null
+            elevation = null,
+            enabled = enabled
         ) {
             Text(
                 text = text,

@@ -5,9 +5,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.specime.firestore.FireStoreController
-import com.example.specime.screens.auths.components.validateEmail
-import com.example.specime.screens.auths.components.validateUsername
+import com.example.specime.firebase.FireStoreController
+import com.example.specime.screens.authentication.components.validateEmail
+import com.example.specime.screens.authentication.components.validateUsername
 import com.example.specime.userrepository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch

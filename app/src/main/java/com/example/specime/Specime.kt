@@ -36,6 +36,8 @@ class Specime : ComponentActivity() {
             "login"
         }
 
+        //FirestoreUploader.uploadQuestions()
+
         setContent {
             CompositionLocalProvider(LocalRippleConfiguration provides null) {
                 AppTheme {

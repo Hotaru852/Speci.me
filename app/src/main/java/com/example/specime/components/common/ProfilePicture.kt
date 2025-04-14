@@ -2,6 +2,7 @@ package com.example.specime.components.common
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +19,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
@@ -39,8 +43,9 @@ fun ProfilePicture(
     ) {
         Surface(
             shape = CircleShape,
-            color = MaterialTheme.colorScheme.surface,
+            color = Color.White,
             modifier = Modifier.fillMaxSize()
+                .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape)
                 .clickable(onClick = onProfilePictureClick)
         ) {
             when {
@@ -48,7 +53,8 @@ fun ProfilePicture(
                     AsyncImage(
                         model = imageUrl,
                         contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize().clip(CircleShape),
+                        contentScale = ContentScale.Crop ,
                         onState = {
                             if (it is AsyncImagePainter.State.Success) {
                                 isLoading = false
@@ -70,12 +76,12 @@ fun ProfilePicture(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)),
+                        .background(Color.White.copy(alpha = 0.5f)),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(50.dp)
+                        modifier = Modifier.size((imageSize / 5).dp)
                     )
                 }
             }
@@ -84,7 +90,7 @@ fun ProfilePicture(
         if (editable) {
             Surface(
                 shape = CircleShape,
-                color = MaterialTheme.colorScheme.surface,
+                color = Color.White,
                 shadowElevation = 5.dp,
                 modifier = Modifier.size(50.dp)
             ) {

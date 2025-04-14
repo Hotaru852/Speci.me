@@ -1,9 +1,9 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    id("com.google.gms.google-services")
     id("com.google.dagger.hilt.android")
     id("kotlin-kapt")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -47,10 +47,13 @@ android {
 
 dependencies {
     implementation(libs.firebase.storage.ktx)
+    implementation(libs.firebase.functions.ktx)
     val composeBom = platform("androidx.compose:compose-bom:2024.10.01")
     implementation(composeBom)
     androidTestImplementation(composeBom)
     kapt(libs.hilt.compiler)
+    implementation(libs.firebase.appcheck.playintegrity)
+    implementation(libs.firebase.appcheck.debug)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.datastore.core)
     implementation(libs.coil.compose)

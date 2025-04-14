@@ -13,12 +13,30 @@
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
     </style>
+    <!-- 1) Your custom dialog theme -->
     <style name="CustomDatePickerDialog" parent="Theme.AppCompat.Light.Dialog">
+        <!-- Applies your date picker style -->
         <item name="android:datePickerStyle">@style/CustomDatePicker</item>
+
+        <!-- Applies the custom styles to the positive/negative buttons -->
+        <item name="android:buttonBarPositiveButtonStyle">@style/MyDialogButtonStyle</item>
+        <item name="android:buttonBarNegativeButtonStyle">@style/MyDialogButtonStyle</item>
     </style>
+
+    <!-- 2) The date picker style (unchanged) -->
     <style name="CustomDatePicker">
-        <item name="android:headerBackground">#365E9D</item>
-        <item name="android:background">#F9F9FF</item>
+        <item name="android:headerBackground">#476800</item>
+        <item name="android:background">#F8FBE8</item>
         <item name="android:datePickerMode">calendar</item>
+        <item name="android:colorAccent">#476800</item>
     </style>
+
+    <!-- 3) A custom button style for the OK/CANCEL buttons -->
+    <style name="MyDialogButtonStyle" parent="@android:style/Widget.Material.Button.Borderless.Colored">
+        <!-- Set the text color of the button -->
+        <item name="android:textColor">#476800</item>
+        <!-- Optionally tint the background or text (depends on parent) -->
+        <item name="android:backgroundTint">#476800</item>
+    </style>
+
 </resources>

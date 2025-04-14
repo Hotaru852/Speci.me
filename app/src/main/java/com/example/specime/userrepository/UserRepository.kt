@@ -6,6 +6,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.UserProfileChangeRequest
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -20,6 +21,14 @@ class UserRepository @Inject constructor(
         return firebaseAuth.currentUser?.uid
     }
 
+    fun getUserEmail(): String? {
+        return firebaseAuth.currentUser?.email
+    }
+
+    fun getUserDisplayName() : String? {
+        return firebaseAuth.currentUser?.displayName
+    }
+
     private fun saveUserToFirestore(
         userId: String,
         displayName: String,
@@ -32,7 +41,8 @@ class UserRepository @Inject constructor(
             "email" to email,
             "birthday" to "1/1/2000",
             "profilePictureUrl" to profilePictureUrl,
-            "isGoogleAccount" to isGoogleAccount
+            "isGoogleAccount" to isGoogleAccount,
+            "groups" to listOf<String>()
         )
         fireStore.collection("users")
             .document(userId)
@@ -119,13 +129,15 @@ class UserRepository @Inject constructor(
                                         isGoogleAccount = true
                                     )
                                 }
+                                currentUser.email?.let { email ->
+                                    syncUserGroups(email, currentUser.uid)
+                                }
                                 callback(true)
                             }
                     }
                 }
             }
     }
-
 
     fun signInWithEmailAndPassword(
         email: String,
@@ -174,6 +186,7 @@ class UserRepository @Inject constructor(
                                             profilePictureUrl = "",
                                             isGoogleAccount = false
                                         )
+                                        syncUserGroups(email, currentUser.uid)
                                         callback(true, "")
                                     } else {
                                         currentUser.delete()
@@ -229,8 +242,43 @@ class UserRepository @Inject constructor(
         }
     }
 
+    fun updateGroup(
+        groupId: String,
+        callback: (success: Boolean) -> Unit
+    ) {
+        val currentUser = firebaseAuth.currentUser
+
+        if (currentUser != null) {
+            val userDocRef = fireStore.collection("users").document(currentUser.uid)
+
+            userDocRef.update("groups", FieldValue.arrayUnion(groupId))
+                .addOnSuccessListener {
+                    callback(true)
+                }
+        }
+    }
+
     fun signOut() {
         firebaseAuth.signOut()
         sharedPreferences.edit().remove("rememberLogin").apply()
+    }
+
+    private fun syncUserGroups(email: String, userId: String) {
+        val userDocRef = fireStore.collection("users").document(userId)
+
+        fireStore.collection("groups")
+            .whereArrayContains("emails", email)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                if (!querySnapshot.isEmpty) {
+                    querySnapshot.documents.forEach { groupDoc ->
+                        val groupId = groupDoc.id
+                        userDocRef.update("groups", FieldValue.arrayUnion(groupId))
+                        fireStore.collection("groups")
+                            .document(groupId)
+                            .update("userIds", FieldValue.arrayUnion(userId))
+                    }
+                }
+            }
     }
 }
