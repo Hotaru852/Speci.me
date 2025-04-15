@@ -230,8 +230,8 @@ fun HomeScreen(
                     ?.filter { it.groupName != null && it.groupId != null }
                     ?.associate { it.groupName!! to it.groupId!! } ?: emptyMap(),
                 onDismiss = { viewModel.handleAction(HomeScreenAction.CancelChooseTestOption) },
-                onConfirm = { groupName, groupId ->
-                    navController.navigate("test?groupName=${groupName}&groupId=${groupId}")
+                onConfirm = { groupId ->
+                    navController.navigate("test?groupId=${groupId}")
                 }
             )
         }

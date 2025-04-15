@@ -517,7 +517,6 @@ class FireStoreController @Inject constructor(
 
     fun uploadTestResult(
         userId: String,
-        groupName: String?,
         groupId: String?,
         result: Map<String, Int>,
         trait: String,
@@ -533,12 +532,9 @@ class FireStoreController @Inject constructor(
                     "result" to result,
                     "trait" to trait,
                     "resultDetailId" to resultDetailId,
-                    "timestamp" to FieldValue.serverTimestamp(),
-                    "username" to userRepository.getUserDisplayName()!!,
-                    "email" to userRepository.getUserEmail()!!
+                    "timestamp" to FieldValue.serverTimestamp()
                 )
 
-                groupName?.let { data["groupName"] = it }
                 groupId?.let { data["groupId"] = it }
 
                 fireStore.collection("test_results")

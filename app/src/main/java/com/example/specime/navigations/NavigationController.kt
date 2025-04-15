@@ -36,13 +36,8 @@ fun NavigationController(startDestination: String) {
         composable("signup") { SignupScreen(navController) }
         composable("changePassword") { ChangePasswordSceen(navController) }
         composable(
-            route = "test?groupName={groupName}&groupId={groupId}",
+            route = "test?groupId={groupId}",
             arguments = listOf(
-                navArgument("groupName") {
-                    type = NavType.StringType
-                    defaultValue = null
-                    nullable = true
-                },
                 navArgument("groupId") {
                     type = NavType.StringType
                     defaultValue = null
@@ -52,7 +47,6 @@ fun NavigationController(startDestination: String) {
         ) { backStackEntry ->
             TestScreen(
                 navController = navController,
-                groupName = backStackEntry.arguments?.getString("groupName"),
                 groupId = backStackEntry.arguments?.getString("groupId")
             )
         }

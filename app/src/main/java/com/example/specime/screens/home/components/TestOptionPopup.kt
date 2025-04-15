@@ -41,7 +41,7 @@ import com.example.specime.components.common.FlexibleButton
 fun TestOptionPopup(
     groups: Map<String, String>,
     onDismiss: () -> Unit,
-    onConfirm: (groupName: String?, groupId: String?) -> Unit
+    onConfirm: (groupId: String?) -> Unit
 ) {
     BasicAlertDialog(
         onDismissRequest = onDismiss,
@@ -175,9 +175,9 @@ fun TestOptionPopup(
                     rounded = 7,
                     onClick = {
                         if (selectedType == "Cá nhân") {
-                            onConfirm(null, null)
+                            onConfirm(null)
                         } else {
-                            onConfirm(selectedGroup, groups[selectedGroup])
+                            onConfirm(groups[selectedGroup])
                         }
                     },
                     textStyle = MaterialTheme.typography.bodyMedium,

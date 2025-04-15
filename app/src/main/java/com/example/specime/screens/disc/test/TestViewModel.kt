@@ -42,7 +42,6 @@ class TestViewModel @Inject constructor(
     }
 
     private fun uploadTestResult(
-        groupName: String?,
         groupId: String?
     ) {
         val userId = userRepository.getUserId() ?: return
@@ -59,7 +58,7 @@ class TestViewModel @Inject constructor(
             )
         }
 
-        fireStoreController.uploadTestResult(userId, groupName, groupId, result, trait, detailData) {
+        fireStoreController.uploadTestResult(userId, groupId, result, trait, detailData) {
             state = state.copy(
                 isUploading = false,
                 result = trait,
@@ -82,7 +81,7 @@ class TestViewModel @Inject constructor(
 
             is TestAction.Submit -> {
                 state = state.copy(isUploading = true)
-                uploadTestResult(action.groupName, action.groudId)
+                uploadTestResult(action.groudId)
             }
 
             TestAction.Quit -> {

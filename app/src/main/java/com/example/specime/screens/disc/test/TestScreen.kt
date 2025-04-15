@@ -45,7 +45,6 @@ import com.example.specime.screens.disc.components.QuitPopup
 @Composable
 fun TestScreen(
     navController: NavController,
-    groupName: String?,
     groupId: String?,
     viewModel: TestViewModel = hiltViewModel()
 ) {
@@ -146,7 +145,7 @@ fun TestScreen(
                     text = "Hoàn Thành",
                     width = 150,
                     height = 40,
-                    onClick = { viewModel.handleAction(TestAction.Submit(groupName, groupId)) },
+                    onClick = { viewModel.handleAction(TestAction.Submit(groupId)) },
                     rounded = 7,
                     enabled = state.questionsAnswer.size == state.questions.size,
                     textStyle = MaterialTheme.typography.bodyLarge,
